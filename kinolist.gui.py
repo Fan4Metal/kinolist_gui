@@ -24,8 +24,9 @@ class MyFrame(wx.Frame):
         self.l_search = wx.StaticText(panel, label='Фильм')
         gr.Add(self.l_search, pos=(0, 0), flag = wx.TOP | wx.BOTTOM | wx.LEFT, border = 10)
         
-        self.t_search = wx.TextCtrl(panel)
+        self.t_search = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
         gr.Add(self.t_search, pos=(0, 1), flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT, border = 5)
+        self.Bind(wx.EVT_TEXT_ENTER, self.onEnter)
         
         self.b_search = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Добавить')
         gr.Add(self.b_search, pos=(0, 2), flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
@@ -49,11 +50,15 @@ class MyFrame(wx.Frame):
         self.b_save = wx.Button(panel, wx.ID_ANY, label='Сохранить в формате docx')
         gr.Add(self.b_save, pos=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSave, id=self.b_save.GetId())
-        
+                
         gr.AddGrowableCol(1)
         gr.AddGrowableRow(3)
         panel.SetSizer(gr)
         self.Centre()
+        
+            
+    def onEnter(self, event):
+        self.onSearch(self)
         
         
     def onQuit(self, event):
@@ -62,10 +67,10 @@ class MyFrame(wx.Frame):
     def onSearch(self, event):
         if self.t_search.Value:
             film = kl.find_kp_id2(self.t_search.Value, api)
-            self.film_list.Append(f'{film[1]} ({film[2]})')
-            self.film_id_list.append(film[0])
-            print(f'{film[1]} ({film[2]})')
-            print(self.film_id_list)
+            if film:
+                self.film_list.Append(f'{film[1]} ({film[2]})')
+                self.film_id_list.append(film[0])
+                self.t_search.Value = ""    
             
             
     def onDelete(self, event):
@@ -73,12 +78,12 @@ class MyFrame(wx.Frame):
         if sel != -1:
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
-            print(self.film_id_list)
+   
             
     def onSave(self, event):
         if self.film_id_list:
             kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
-        
+
 
 app = wx.App()
 top = MyFrame(None, title="Kinolist GUI")
