@@ -8,7 +8,7 @@ APP_EXIT = 1
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(500, 500))
+        super().__init__(parent, title=title, size=(500, 500), style = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.film_id_list = []
         
         menubar = wx.MenuBar()
@@ -89,6 +89,7 @@ class MyFrame(wx.Frame):
         
 
 app = wx.App()
+style = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX)
 top = MyFrame(None, title="Kinolist GUI")
 top.Show()
 app.MainLoop()
