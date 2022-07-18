@@ -1,3 +1,4 @@
+import os
 import wx
 import kinolist_lib as kl
 import config 
@@ -83,7 +84,9 @@ class MyFrame(wx.Frame):
     def onSave(self, event):
         if self.film_id_list:
             kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
-
+            if os.path.exists('C:\Program Files\Microsoft Office\Office14\WINWORD.EXE'):
+                os.system('start "C:\Program Files\Microsoft Office\Office14\WINWORD.EXE" list.docx')
+        
 
 app = wx.App()
 top = MyFrame(None, title="Kinolist GUI")
