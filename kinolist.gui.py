@@ -35,10 +35,10 @@ class MyFrame(wx.Frame):
         gr.Add(self.b_search, pos=(0, 2), flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSearch, id=self.b_search.GetId())
         
-        self.search_list = wx.ListBox(panel, wx.ID_ANY, style = wx.LB_SINGLE)
+        self.search_list = wx.ListBox(panel, wx.ID_ANY, size=(200, 70), style = wx.LB_SINGLE)
         gr.Add(self.search_list, pos=(1, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)  
-        # self.Bind(wx.EVT_LISTBOX_DCLICK, self.onDblclck, id=self.search_list.GetId())
-        self.search_list.Bind(wx.EVT_KEY_DOWN, self.onDblclck)
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.onListEnter, id=self.search_list.GetId())
+        self.search_list.Bind(wx.EVT_KEY_DOWN, self.onListEnter)
         
         self.film_list = wx.ListBox(panel, style = wx.LB_SINGLE)
         gr.Add(self.film_list, pos=(2, 1), span=(3, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
@@ -82,19 +82,14 @@ class MyFrame(wx.Frame):
             if self.films:
                 for film in self.films:
                     self.search_list.Append(f'{film[1]} ({film[2]})')
-                # self.film_list.Append(f'{film[0][1]} ({film[0][2]})')
-                # self.film_id_list.append(film[0][0])
-                # self.all_searched_films.append(self.films)
                 self.t_search.Value = ""
-                # self.b_add.SetFocus()
                 self.search_list.SetFocus()
                 self.search_list.SetSelection(0)
     
 
-    def onDblclck(self, event):
+    def onListEnter(self, event):
         key = event.GetKeyCode()
         if key == wx.WXK_RETURN:
-            print("Enter")
             self.onAdd(self)
         event.Skip()
     
@@ -114,7 +109,6 @@ class MyFrame(wx.Frame):
         if sel != -1:
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
-            # del(self.all_searched_films[sel])
    
             
     def onSave(self, event):
@@ -125,7 +119,6 @@ class MyFrame(wx.Frame):
     
     
     def onChange(self, event):
-        # search = MyFrameChange(self)
         self.search_window = MyFrameChange(self)
         sel = self.film_list.GetSelection()
         if sel != -1:
@@ -134,42 +127,12 @@ class MyFrame(wx.Frame):
         self.search_window.Show()
 
 
-class MyFrameChange(wx.Frame):
-    def __init__(self, parent):
-        super().__init__(parent, size=(320, 350), style = (wx.DEFAULT_FRAME_STYLE| wx.FRAME_FLOAT_ON_PARENT)
-                         & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX | wx.MINIMIZE_BOX | wx.CLOSE_BOX))
-        self.Centre()
-        self.panel = wx.Panel(self)
-        self.box1 = wx.BoxSizer(wx.VERTICAL)
-        
-        
-        self.film_list = wx.ListBox(self.panel, size=(310, 250), style = wx.LB_SINGLE)
-        self.box1.Add(self.film_list, flag = wx.EXPAND | wx.BOTTOM | wx.LEFT | wx.RIGHT | wx.TOP, border = 10)
-
-        self.box2 = wx.BoxSizer(wx.HORIZONTAL)
-       
-        self.b_ok = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='ОК')
-        self.box2.Add(self.b_ok, flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 10)
-        self.Bind(wx.EVT_BUTTON, self.onOk, id=self.b_ok.GetId())
-        
-        self.b_cancel = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Отмена')
-        self.box2.Add(self.b_cancel, flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 10)
-        self.Bind(wx.EVT_BUTTON, self.onCancel, id=self.b_cancel.GetId())
-                
-        self.box1.Add(self.box2, flag = wx.ALIGN_CENTER | wx.BOTTOM | wx.LEFT, border = 10)
-        
-        self.panel.SetSizer(self.box1)
-        
-    def onOk(self, event):
-        pass
+def main():
+    app = wx.App()
+    top = MyFrame(None, title="Kinolist GUI")
+    top.Show()
+    app.MainLoop()
     
-    
-    def onCancel(self,event):
-        pass
+if __name__ == '__main__':
+    main()
 
-
-app = wx.App()
-top = MyFrame(None, title="Kinolist GUI")
-top.Show()
-# search.Show()
-app.MainLoop()
