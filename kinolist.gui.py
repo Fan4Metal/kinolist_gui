@@ -6,9 +6,48 @@ import config
 api = config.KINOPOISK_API_TOKEN
 APP_EXIT = 1
 
+def PIL2wx (image):
+    width, height = image.size
+    return wx.Bitmap.FromBuffer(width, height, image.tobytes())
+
+
+class InfoPanel(wx.Dialog): 
+    def __init__(self, parent, title): 
+        super().__init__(parent, title = title, size = (650, 400))
+        
+        sel = parent.film_list.GetSelection()
+        if sel != -1:
+            filminfo = kl.get_film_info(parent.film_id_list[sel], api)
+            
+        poster = filminfo[9]
+        poster.thumbnail((200, 300))
+        
+        self.panel = wx.Panel(self) 
+        self.box1v = wx.BoxSizer(wx.VERTICAL)
+        self.box2h = wx.BoxSizer(wx.HORIZONTAL)
+        self.btn = wx.Button(self.panel, wx.ID_OK, label = "OK", size = (100, 25))
+        self.box1v.Add(self.box2h, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5 )
+        self.box1v.Add(self.btn, flag = wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5 )
+        
+        self.image = wx.StaticBitmap(self.panel, wx.ID_ANY, wx.Bitmap(PIL2wx(poster)), size=(200, 300))
+        self.box3v = wx.BoxSizer(wx.VERTICAL)
+        self.box2h.Add(self.image, flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.box2h.Add(self.box3v, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        
+        self.l_search1 = wx.StaticText(self.panel, label = f"{filminfo[0]} ({filminfo[1]}) - Кинопоиск {filminfo[2]}")
+        self.l_search2 = wx.StaticText(self.panel, label = str(filminfo[1]))
+        self.l_search3 = wx.StaticText(self.panel, label = filminfo[4])
+        self.box3v.Add(self.l_search1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.box3v.Add(self.l_search2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.box3v.Add(self.l_search3, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        
+        self.panel.SetSizer(self.box1v)
+        self.Centre()
+
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(500, 500), style = (wx.DEFAULT_FRAME_STYLE | wx.WANTS_CHARS) & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        super().__init__(parent, title=title, size=(500, 500), style = (wx.DEFAULT_FRAME_STYLE | 
+                                                                        wx.WANTS_CHARS) & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.film_id_list = []
         self.all_searched_films = []
         
@@ -47,9 +86,9 @@ class MyFrame(wx.Frame):
         gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onAdd, id=self.b_add.GetId())
         
-        self.b_change = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Изменить')
-        gr.Add(self.b_change, pos=(2, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
-        self.Bind(wx.EVT_BUTTON, self.onChange, id=self.b_change.GetId())
+        self.b_info = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Информация')
+        gr.Add(self.b_info, pos=(2, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.Bind(wx.EVT_BUTTON, self.onInfo, id=self.b_info.GetId())
         
         self.b_delete = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Удалить')
         gr.Add(self.b_delete, pos=(3, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
@@ -65,7 +104,6 @@ class MyFrame(wx.Frame):
         self.Centre()
         
         
-            
     def onEnter(self, event):
         self.onSearch(self)
         
@@ -103,7 +141,6 @@ class MyFrame(wx.Frame):
             self.t_search.SetFocus()
             
             
-            
     def onDelete(self, event):
         sel = self.film_list.GetSelection()
         if sel != -1:
@@ -118,13 +155,10 @@ class MyFrame(wx.Frame):
                 os.system('start "C:\Program Files\Microsoft Office\Office14\WINWORD.EXE" list.docx')
     
     
-    def onChange(self, event):
-        self.search_window = MyFrameChange(self)
+    def onInfo(self, event):
         sel = self.film_list.GetSelection()
         if sel != -1:
-            for item in self.all_searched_films[sel]:
-                self.search_window.film_list.Append(f"{item[1]} ({item[2]})")
-        self.search_window.Show()
+            self.info = InfoPanel(self, 'Информация о фильме').ShowModal()
 
 
 def main():
@@ -132,7 +166,7 @@ def main():
     top = MyFrame(None, title="Kinolist GUI")
     top.Show()
     app.MainLoop()
-    
+
 if __name__ == '__main__':
     main()
 
