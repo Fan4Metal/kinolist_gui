@@ -195,6 +195,54 @@ def find_kp_id2(film: str, api: str):
         return result
 
 
+def find_kp_id3(film: str, api: str):
+    result = []
+    code_in_name = find_kp_id_in_title(film)
+    if code_in_name:
+        try:
+            film_info = get_film_info(code_in_name, api)
+            log.info(f'Найден фильм: {film_info[0]} ({film_info[1]}), kinopoisk id: {code_in_name}')
+            result.append(code_in_name)
+            result.append(film_info[0])
+            result.append({film_info[1]})
+            return result
+        except Exception:
+            return result
+    payload = {'keyword': film, 'page': 1}
+    headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
+    try:
+        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
+                         headers=headers,
+                         params=payload)
+        if r.status_code == 200:
+            resp_json = r.json()
+            if resp_json['searchFilmsCountResult'] == 0:
+                log.info(f'{film} не найден')
+                return result
+            else:
+                for item in resp_json['films']:
+                    film_list = []
+                    id = item['filmId']
+                    year = item['year']
+                    if 'nameRu' in item:
+                        found_film = item['nameRu']
+                    else:
+                        found_film = item['nameEn']
+                    log.info(f'Найден фильм: {found_film} ({year}), kinopoisk id: {id}')
+                    film_list.append(id)
+                    film_list.append(found_film)
+                    film_list.append(year)
+                    result.append(film_list)
+                return result
+        else:
+            log.warning('Ошибка доступа к https://kinopoiskapiunofficial.tech')
+            return result
+    except Exception as e:
+        log.warning("Exeption:", str(e))
+        log.info(f'{film} не найден (exeption)')
+        return result
+
+
 def get_film_info(film_code, api, shorten=False):
     '''
     Получение информации о фильме с помощью kinopoisk_api_client.
