@@ -8,7 +8,7 @@ APP_EXIT = 1
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
-        super().__init__(parent, title=title, size=(500, 500), style = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
+        super().__init__(parent, title=title, size=(500, 500), style = (wx.DEFAULT_FRAME_STYLE | wx.WANTS_CHARS) & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.film_id_list = []
         self.all_searched_films = []
         
@@ -29,17 +29,23 @@ class MyFrame(wx.Frame):
         self.t_search = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
         gr.Add(self.t_search, pos=(0, 1), flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_TEXT_ENTER, self.onEnter)
+        self.t_search.Value = "Матрица"
         
-        self.b_search = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Добавить')
+        self.b_search = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Поиск')
         gr.Add(self.b_search, pos=(0, 2), flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSearch, id=self.b_search.GetId())
         
-        self.film_list = wx.ListBox(panel, style = wx.LB_SINGLE)
-        gr.Add(self.film_list, pos=(1, 1), span=(3, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
+        self.search_list = wx.ListBox(panel, wx.ID_ANY, style = wx.LB_SINGLE)
+        gr.Add(self.search_list, pos=(1, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)  
+        # self.Bind(wx.EVT_LISTBOX_DCLICK, self.onDblclck, id=self.search_list.GetId())
+        self.search_list.Bind(wx.EVT_KEY_DOWN, self.onDblclck)
         
-        self.b_info = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Информация')
-        gr.Add(self.b_info, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
-        # self.Bind(wx.EVT_BUTTON, self.onSearch, id=b_info.GetId())
+        self.film_list = wx.ListBox(panel, style = wx.LB_SINGLE)
+        gr.Add(self.film_list, pos=(2, 1), span=(3, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
+        
+        self.b_add = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Добавить')
+        gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.Bind(wx.EVT_BUTTON, self.onAdd, id=self.b_add.GetId())
         
         self.b_change = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Изменить')
         gr.Add(self.b_change, pos=(2, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
@@ -50,7 +56,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onDelete, id=self.b_delete.GetId())
         
         self.b_save = wx.Button(panel, wx.ID_ANY, label='Сохранить в формате docx')
-        gr.Add(self.b_save, pos=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
+        gr.Add(self.b_save, pos=(5, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSave, id=self.b_save.GetId())
                 
         gr.AddGrowableCol(1)
@@ -67,14 +73,40 @@ class MyFrame(wx.Frame):
     def onQuit(self, event):
         self.Close()
 
+
     def onSearch(self, event):
+        self.films = []
+        self.search_list.Clear()
         if self.t_search.Value:
-            film = kl.find_kp_id3(self.t_search.Value, api)
-            if film:
-                self.film_list.Append(f'{film[0][1]} ({film[0][2]})')
-                self.film_id_list.append(film[0][0])
-                self.all_searched_films.append(film)
+            self.films = kl.find_kp_id3(self.t_search.Value, api)
+            if self.films:
+                for film in self.films:
+                    self.search_list.Append(f'{film[1]} ({film[2]})')
+                # self.film_list.Append(f'{film[0][1]} ({film[0][2]})')
+                # self.film_id_list.append(film[0][0])
+                # self.all_searched_films.append(self.films)
                 self.t_search.Value = ""
+                # self.b_add.SetFocus()
+                self.search_list.SetFocus()
+                self.search_list.SetSelection(0)
+    
+
+    def onDblclck(self, event):
+        key = event.GetKeyCode()
+        if key == wx.WXK_RETURN:
+            print("Enter")
+            self.onAdd(self)
+        event.Skip()
+    
+    
+    def onAdd(self, event):
+        sel = self.search_list.GetSelection()
+        if sel != -1:
+            self.film_list.Append(f'{self.films[sel][1]} ({self.films[sel][2]})')
+            self.film_id_list.append(self.films[sel][0])
+            self.search_list.Clear()
+            self.t_search.SetFocus()
+            
             
             
     def onDelete(self, event):
@@ -82,7 +114,7 @@ class MyFrame(wx.Frame):
         if sel != -1:
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
-            del(self.all_searched_films[sel])
+            # del(self.all_searched_films[sel])
    
             
     def onSave(self, event):
