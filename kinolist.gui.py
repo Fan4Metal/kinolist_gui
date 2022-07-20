@@ -1,4 +1,5 @@
 import os
+import winreg
 import wx
 import kinolist_lib as kl
 import config 
@@ -7,10 +8,22 @@ api = config.KINOPOISK_API_TOKEN
 
 VER = "0.1.1"
 APP_EXIT = 1
+REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
 
 def PIL2wx (image):
     width, height = image.size
     return wx.Bitmap.FromBuffer(width, height, image.tobytes())
+
+
+def get_reg(name, reg_path):
+    try:
+        registry_key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_path, 0,
+                                       winreg.KEY_READ)
+        value, regtype = winreg.QueryValueEx(registry_key, name)
+        winreg.CloseKey(registry_key)
+        return value
+    except WindowsError:
+        return None
 
 
 class InfoPanel(wx.Dialog): 
@@ -177,12 +190,12 @@ class MyFrame(wx.Frame):
     def onSave(self, event):
         if self.film_id_list:
             kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
-            if os.path.exists('C:\Program Files\Microsoft Office\Office14\WINWORD.EXE'):
-                os.system('start "C:\Program Files\Microsoft Office\Office14\WINWORD.EXE" list.docx')
-            elif os.path.exists('C:\Program Files\Microsoft Office\Office15\WINWORD.EXE'):
-                os.system('start "C:\Program Files\Microsoft Office\Office15\WINWORD.EXE" list.docx')
-            elif os.path.exists('C:\Program Files\Microsoft Office\Office16\WINWORD.EXE'):
-                os.system('start "C:\Program Files\Microsoft Office\Office16\WINWORD.EXE" list.docx')   
+            
+            reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
+            word_path = get_reg("path", reg_path) + "winword.exe"
+            if os.path.exists(word_path):
+                os.system(f'start "{word_path}" list.docx')
+ 
     
     def onInfo(self, event):
         sel_film_list = self.film_list.GetSelection()
