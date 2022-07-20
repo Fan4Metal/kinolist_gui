@@ -66,6 +66,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onQuit, id=APP_EXIT)
 
         panel = wx.Panel(self)
+               
         gr = wx.GridBagSizer(7, 3)
         
         self.l_search = wx.StaticText(panel, label='Фильм')
@@ -117,6 +118,10 @@ class MyFrame(wx.Frame):
         panel.SetSizer(gr)
         self.Centre()
         
+        self.statusbar = self.CreateStatusBar(2)
+        self.statusbar.SetStatusWidths([20, -1])
+        self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
+        
         
     def onEnter(self, event):
         self.onSearch(self)
@@ -153,7 +158,8 @@ class MyFrame(wx.Frame):
             self.film_id_list.append(self.films[sel][0])
             self.search_list.Clear()
             self.t_search.SetFocus()
-            
+            self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
+
             
     def onDelete(self, event):
         sel = self.film_list.GetSelection()
@@ -161,6 +167,7 @@ class MyFrame(wx.Frame):
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
             self.film_list.SetSelection(sel - 1)
+            self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
    
             
     def onSave(self, event):
