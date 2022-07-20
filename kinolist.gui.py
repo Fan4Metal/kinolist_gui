@@ -16,8 +16,7 @@ class InfoPanel(wx.Dialog):
         super().__init__(parent, title = title, size = (650, 400))
         
         sel = parent.film_list.GetSelection()
-        if sel != -1:
-            filminfo = kl.get_film_info(parent.film_id_list[sel], api)
+        filminfo = kl.get_film_info(parent.film_id_list[sel], api)
             
         poster = filminfo[9]
         poster.thumbnail((200, 300))
@@ -33,12 +32,19 @@ class InfoPanel(wx.Dialog):
         self.box3v = wx.BoxSizer(wx.VERTICAL)
         self.box2h.Add(self.image, flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.box2h.Add(self.box3v, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
-        
-        self.l_search1 = wx.StaticText(self.panel, label = f"{filminfo[0]} ({filminfo[1]}) - Кинопоиск {filminfo[2]}")
-        self.l_search2 = wx.StaticText(self.panel, label = str(filminfo[1]))
+        self.l_search1 = wx.StaticText(self.panel)
+        if filminfo[2]:
+            self.l_search1.Label = f"{filminfo[0]} ({filminfo[1]}) - Кинопоиск {filminfo[2]}"
+        else:
+            self.l_search1.Label = f"{filminfo[0]} ({filminfo[1]}) - нет рейтинга"
+        if len(filminfo[7]) > 1:
+            description = f"{filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссеры: {', '.join(filminfo[7])}\nВглавных ролях: {', '.join(filminfo[8])}"
+        else:
+            description = f"{filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
+        self.l_search2 = wx.StaticText(self.panel, label = description)
         self.l_search3 = wx.StaticText(self.panel, label = filminfo[4])
         self.box3v.Add(self.l_search1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
-        self.box3v.Add(self.l_search2, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.box3v.Add(self.l_search2, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.box3v.Add(self.l_search3, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         
         self.panel.SetSizer(self.box1v)
@@ -80,7 +86,7 @@ class MyFrame(wx.Frame):
         self.search_list.Bind(wx.EVT_KEY_DOWN, self.onListEnter)
         
         self.film_list = wx.ListBox(panel, style = wx.LB_SINGLE)
-        gr.Add(self.film_list, pos=(2, 1), span=(3, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
+        gr.Add(self.film_list, pos=(2, 1), span=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
         
         self.b_add = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Добавить')
         gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
@@ -94,12 +100,20 @@ class MyFrame(wx.Frame):
         gr.Add(self.b_delete, pos=(3, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onDelete, id=self.b_delete.GetId())
         
+        self.b_up = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='\u21e7')
+        gr.Add(self.b_up, pos=(4, 2), flag = wx.ALIGN_CENTER | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.Bind(wx.EVT_BUTTON, self.onUp, id=self.b_up.GetId())
+        
+        self.b_down = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='\u21e9')
+        gr.Add(self.b_down, pos=(5, 2), flag = wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.Bind(wx.EVT_BUTTON, self.onDown, id=self.b_down.GetId())
+        
         self.b_save = wx.Button(panel, wx.ID_ANY, label='Сохранить в формате docx')
-        gr.Add(self.b_save, pos=(5, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
+        gr.Add(self.b_save, pos=(6, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSave, id=self.b_save.GetId())
                 
         gr.AddGrowableCol(1)
-        gr.AddGrowableRow(3)
+        gr.AddGrowableRow(5)
         panel.SetSizer(gr)
         self.Centre()
         
@@ -146,6 +160,7 @@ class MyFrame(wx.Frame):
         if sel != -1:
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
+            self.film_list.SetSelection(sel - 1)
    
             
     def onSave(self, event):
@@ -153,13 +168,33 @@ class MyFrame(wx.Frame):
             kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
             if os.path.exists('C:\Program Files\Microsoft Office\Office14\WINWORD.EXE'):
                 os.system('start "C:\Program Files\Microsoft Office\Office14\WINWORD.EXE" list.docx')
-    
+            elif os.path.exists('C:\Program Files\Microsoft Office\Office15\WINWORD.EXE'):
+                os.system('start "C:\Program Files\Microsoft Office\Office15\WINWORD.EXE" list.docx')
+            elif os.path.exists('C:\Program Files\Microsoft Office\Office16\WINWORD.EXE'):
+                os.system('start "C:\Program Files\Microsoft Office\Office16\WINWORD.EXE" list.docx')   
     
     def onInfo(self, event):
         sel = self.film_list.GetSelection()
         if sel != -1:
             self.info = InfoPanel(self, 'Информация о фильме').ShowModal()
-
+    
+    def onUp(self, event):
+        sel = self.film_list.GetSelection()
+        if sel != -1 and sel != 0:
+            items = self.film_list.GetItems()
+            items[sel], items[sel - 1] = items[sel - 1], items[sel]
+            self.film_list.SetItems(items)
+            self.film_id_list[sel], self.film_id_list[sel - 1] = self.film_id_list[sel - 1], self.film_id_list[sel]
+            self.film_list.SetSelection(sel - 1)
+    
+    def onDown(self, event):
+        sel = self.film_list.GetSelection()
+        if sel != -1 and sel != self.film_list.Count:
+            items = self.film_list.GetItems()
+            items[sel], items[sel + 1] = items[sel + 1], items[sel]
+            self.film_list.SetItems(items)
+            self.film_id_list[sel], self.film_id_list[sel + 1] = self.film_id_list[sel + 1], self.film_id_list[sel]
+            self.film_list.SetSelection(sel + 1)
 
 def main():
     app = wx.App()
