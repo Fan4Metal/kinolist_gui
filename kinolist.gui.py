@@ -123,6 +123,7 @@ class MyFrame(wx.Frame):
         self.film_list = wx.ListBox(self.panel, wx.ID_ANY, style = wx.LB_SINGLE)
         self.gr.Add(self.film_list, pos=(2, 1), span=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
         self.Bind(wx.EVT_LISTBOX, self.ListClick2, id=self.film_list.GetId())
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.onInfo, id=self.film_list.GetId())
         
         self.b_add = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Добавить')
         self.gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
@@ -291,8 +292,11 @@ class MyFrame(wx.Frame):
                 return
             path_name = fileDialog.GetPath()
             films_from_file = kl.file_to_list(path_name)
-            self.gauge = wx.Gauge(self.statusbar, range = len(films_from_file), pos = (90, 2), size = (self.statusbar.GetSize()[0] - 90, 20), style=wx.GA_HORIZONTAL)
-            self.count = 0
+            self.gauge = wx.Gauge(self.statusbar, range = len(films_from_file),
+                                  pos = (90, 2), size = (self.statusbar.GetSize()[0] - 95, 20),
+                                  style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
+            counter = 0
+            self.gauge.SetValue(counter)
             for film in films_from_file:
                 foundfilm = kl.find_kp_id4(film, api)
                 if foundfilm:
@@ -301,12 +305,14 @@ class MyFrame(wx.Frame):
                     self.panel.Update()
                     self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
                     self.film_id_list.append(foundfilm[0])
-                    self.count += 1
-                    self.gauge.SetValue(self.count)
+                    counter = counter + 1
+                    self.gauge.SetValue(counter)
+                    
+                    print(self.gauge.GetValue())
                 else:
                     films_not_found.append(film)
-                    self.count += 1
-                    self.gauge.SetValue(self.count)
+                    counter = counter + 1
+                    self.gauge.SetValue(counter)
             if films_not_found:
                 text_not_found = '\n'.join(films_not_found)
                 text = f"Следующие фильмы не найдены:\n{text_not_found}"

@@ -1,0 +1,26 @@
+
+import wx
+ 
+class MyWin(wx.Frame):
+    def __init__(self, parent, title):
+        super(MyWin, self).__init__(parent = parent, title = title)
+        self.initUI()
+        self.Show()
+ 
+    def initUI(self):
+        statusBar = self.CreateStatusBar(id = -1)
+        statusBar.SetFieldsCount(2)
+ 
+        print(statusBar.GetSize())
+        gauge = wx.Gauge(statusBar, range = 100, pos = (2, 2), size = (statusBar.GetSize()[0]/2-13, 20), style=wx.GA_HORIZONTAL)
+        gauge.SetValue(50) # Setting the current schedule is usually updated in real time in events
+
+
+
+def main():
+    app = wx.App()
+    MyWin(None, "Windows - test")
+    app.MainLoop()
+ 
+if __name__ == '__main__':
+    main()
