@@ -229,7 +229,7 @@ class MyFrame(wx.Frame):
     
     def onDown(self, event):
         sel = self.film_list.GetSelection()
-        if sel != -1 and sel != self.film_list.Count:
+        if sel != -1 and sel != (self.film_list.Count - 1):
             items = self.film_list.GetItems()
             items[sel], items[sel + 1] = items[sel + 1], items[sel]
             self.film_list.SetItems(items)
