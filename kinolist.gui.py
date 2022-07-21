@@ -1,6 +1,7 @@
 import os
 import winreg
 import wx
+import wx.adv
 import kinolist_lib as kl
 import config 
 
@@ -71,16 +72,26 @@ class MyFrame(wx.Frame):
         self.film_id_list = []
         self.all_searched_films = []
         
+        
+        # ========== Меню ==========
         menubar = wx.MenuBar()
+        
         fileMenu = wx.Menu()
-        item = wx.MenuItem(fileMenu, APP_EXIT, "Выход\tCtrl+Q")
-        fileMenu.Append(item)
-        menubar.Append(fileMenu, "&File")
+        item_exit = wx.MenuItem(fileMenu, APP_EXIT, "Выход\tCtrl+Q")
+        fileMenu.Append(item_exit)
+        menubar.Append(fileMenu, "Файл")
+        
+        infoMenu = wx.Menu()
+        item_about = wx.MenuItem(fileMenu, wx.ID_ANY, "О программе")
+        infoMenu.Append(item_about)
+        menubar.Append(infoMenu, "Справка")
         self.SetMenuBar(menubar)
         self.Bind(wx.EVT_MENU, self.onQuit, id=APP_EXIT)
+        self.Bind(wx.EVT_MENU, self.OnAboutBox, id=item_about.GetId())
+        
 
+        # ========== Основные элементы ==========
         panel = wx.Panel(self)
-               
         gr = wx.GridBagSizer(7, 3)
         
         self.l_search = wx.StaticText(panel, label='Фильм')
@@ -134,6 +145,8 @@ class MyFrame(wx.Frame):
         panel.SetSizer(gr)
         self.Centre()
         
+        
+        # ========= Статусбар ===========
         self.statusbar = self.CreateStatusBar(2, style = (wx.BORDER_NONE) & ~(wx.STB_SHOW_TIPS))
         self.statusbar.SetStatusWidths([30, -1])
         self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
@@ -231,10 +244,32 @@ class MyFrame(wx.Frame):
         if self.film_list.Selection != -1:
             self.search_list.SetSelection(-1)
        
-        
+    
+    def OnAboutBox(self, event):
+
+        description = """Программа для создания списков фильмов."""
+        licence = """MIT"""
+
+        info = wx.adv.AboutDialogInfo()
+
+        # info.SetIcon(wx.Icon('hunter.png', wx.BITMAP_TYPE_PNG))
+        info.SetName('Kinolist GUI')
+        info.SetVersion(VER)
+        info.SetDescription(description)
+        info.SetCopyright('(C) 2022 Alexander Vanyunin')
+        # info.SetWebSite('http://www.zetcode.com')
+        info.SetLicence(licence)
+        # info.AddDeveloper('Alexander Vanyunin')
+        # info.AddDocWriter('Jan Bodnar')
+        # info.AddArtist('The Tango crew')
+        # info.AddTranslator('Jan Bodnar')
+
+        wx.adv.AboutBox(info)
+    
+    
 def main():
     app = wx.App()
-    top = MyFrame(None, title=f"Kinolist GUI (ver {VER}) ")
+    top = MyFrame(None, title=f"Kinolist GUI")
     top.Show()
     app.MainLoop()
 
