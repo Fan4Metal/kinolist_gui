@@ -7,8 +7,8 @@ import config
 
 api = config.KINOPOISK_API_TOKEN
 
-VER = "0.1.1"
-APP_EXIT = 1
+VER = "0.2.1"
+# APP_EXIT = 1
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
 
 def PIL2wx (image):
@@ -71,13 +71,17 @@ class MyFrame(wx.Frame):
                                                                         wx.WANTS_CHARS) & ~(wx.RESIZE_BORDER | wx.MAXIMIZE_BOX))
         self.film_id_list = []
         self.all_searched_films = []
-        
-        
+                
         # ========== Меню ==========
         menubar = wx.MenuBar()
         
         fileMenu = wx.Menu()
-        item_exit = wx.MenuItem(fileMenu, APP_EXIT, "Выход\tCtrl+Q")
+        item_open = wx.MenuItem(fileMenu, wx.ID_OPEN, "Открыть файл\tCtrl+O")
+        item_save = wx.MenuItem(fileMenu, wx.ID_SAVE, "Сохранить файл\tCtrl+S")
+        item_exit = wx.MenuItem(fileMenu, wx.ID_EXIT, "Выход\tCtrl+Q")
+        fileMenu.Append(item_open)
+        fileMenu.Append(item_save)
+        fileMenu.AppendSeparator()
         fileMenu.Append(item_exit)
         menubar.Append(fileMenu, "Файл")
         
@@ -85,9 +89,13 @@ class MyFrame(wx.Frame):
         item_about = wx.MenuItem(fileMenu, wx.ID_ANY, "О программе")
         infoMenu.Append(item_about)
         menubar.Append(infoMenu, "Справка")
+        
         self.SetMenuBar(menubar)
-        self.Bind(wx.EVT_MENU, self.onQuit, id=APP_EXIT)
-        self.Bind(wx.EVT_MENU, self.OnAboutBox, id=item_about.GetId())
+        
+        self.Bind(wx.EVT_MENU, self.onQuit, id = wx.ID_EXIT)
+        self.Bind(wx.EVT_MENU, self.onOpenFile, id = wx.ID_OPEN)
+        self.Bind(wx.EVT_MENU, self.onSaveFile, id = wx.ID_SAVE)
+        self.Bind(wx.EVT_MENU, self.onAboutBox, id = item_about.GetId())
         
 
         # ========== Основные элементы ==========
@@ -148,9 +156,16 @@ class MyFrame(wx.Frame):
         
         # ========= Статусбар ===========
         self.statusbar = self.CreateStatusBar(2, style = (wx.BORDER_NONE) & ~(wx.STB_SHOW_TIPS))
-        self.statusbar.SetStatusWidths([30, -1])
-        self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
+        self.statusbar.SetStatusWidths([80, -1])
+        self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
         
+        # Перехват события наведения на пункт меню, чтобы отключить автоматический показ подсказок в статусбаре
+        # wx.EVT_MENU_HIGHLIGHT_ALL(self, self.statusbar_status)
+        wx.EvtHandler.Bind(self, wx.EVT_MENU_HIGHLIGHT_ALL, self.statusbar_status)
+        
+    def statusbar_status(self, event):
+        pass
+    
         
     def onEnter(self, event):
         self.onSearch(self)
@@ -188,7 +203,7 @@ class MyFrame(wx.Frame):
             self.film_id_list.append(self.films[sel][0])
             self.search_list.Clear()
             self.t_search.SetFocus()
-            self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
+            self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
 
             
     def onDelete(self, event):
@@ -196,8 +211,11 @@ class MyFrame(wx.Frame):
         if sel != -1:
             self.film_list.Delete(sel)
             del(self.film_id_list[sel])
-            self.film_list.SetSelection(sel - 1)
-            self.statusbar.SetStatusText(" " + str(len(self.film_id_list)))
+            if sel >= 1:
+                self.film_list.SetSelection(sel - 1)
+            if sel == 0 and self.film_list.Count > 0:
+                self.film_list.SetSelection(0)
+            self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
    
             
     def onSave(self, event):
@@ -245,20 +263,17 @@ class MyFrame(wx.Frame):
             self.search_list.SetSelection(-1)
        
     
-    def OnAboutBox(self, event):
-
+    def onAboutBox(self, event):
         description = """Программа для создания списков фильмов."""
         licence = """MIT"""
-
         info = wx.adv.AboutDialogInfo()
-
-        # info.SetIcon(wx.Icon('hunter.png', wx.BITMAP_TYPE_PNG))
         info.SetName('Kinolist GUI')
         info.SetVersion(VER)
         info.SetDescription(description)
         info.SetCopyright('(C) 2022 Alexander Vanyunin')
-        # info.SetWebSite('http://www.zetcode.com')
         info.SetLicence(licence)
+        # info.SetIcon(wx.Icon('hunter.png', wx.BITMAP_TYPE_PNG))
+        # info.SetWebSite('http://www.zetcode.com')
         # info.AddDeveloper('Alexander Vanyunin')
         # info.AddDocWriter('Jan Bodnar')
         # info.AddArtist('The Tango crew')
@@ -267,9 +282,42 @@ class MyFrame(wx.Frame):
         wx.adv.AboutBox(info)
     
     
+    def onOpenFile(self, event):
+        self.film_list.Clear()
+        self.film_id_list = []
+        with wx.FileDialog(self, "Открыть файл...", "", "", "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*", style=wx.FD_OPEN |
+                           wx.FD_FILE_MUST_EXIST) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            path_name = fileDialog.GetPath()
+            films_from_file = kl.file_to_list(path_name)
+            found_films, films_not_found = kl.find_kp_id4(films_from_file, api)
+            if films_not_found:
+                text_not_found = '\n'.join(films_not_found)
+                text = f"Следующие фильмы не найдены:\n{text_not_found}"
+                wx.MessageBox(text, 'Внимание!')
+            if found_films:
+                for item in found_films:
+                    self.film_list.Append(f"{item[1]} ({item[2]})")
+                    self.film_id_list.append(item[0])
+                self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+                    
+                    
+    def onSaveFile(self, event):
+        items_list = self.film_list.GetItems()
+        if items_list:
+            with wx.FileDialog(self, "Сохранить файл...", "", "", "Текстовые файлы (*.txt)|*.txt", style=wx.FD_SAVE) as fileDialog:
+                if fileDialog.ShowModal() == wx.ID_CANCEL:
+                    return
+                path_name = fileDialog.GetPath()
+                print(path_name) 
+                with open(path_name, "w", encoding="utf-8") as f:
+                    for item in items_list:
+                        f.write(item + "\n")
+        
 def main():
     app = wx.App()
-    top = MyFrame(None, title=f"Kinolist GUI")
+    top = MyFrame(None, title = "Kinolist GUI")
     top.Show()
     app.MainLoop()
 
