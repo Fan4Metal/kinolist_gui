@@ -116,7 +116,7 @@ class MyFrame(wx.Frame):
         
         self.search_list = wx.ListBox(self.panel, wx.ID_ANY, size=(200, 70), style = wx.LB_SINGLE)
         self.gr.Add(self.search_list, pos=(1, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)  
-        self.Bind(wx.EVT_LISTBOX_DCLICK, self.onAdd, id=self.search_list.GetId())
+        self.Bind(wx.EVT_LISTBOX_DCLICK, self.onInfo, id=self.search_list.GetId())
         self.search_list.Bind(wx.EVT_KEY_DOWN, self.onListEnter)
         self.Bind(wx.EVT_LISTBOX, self.ListClick1, id=self.search_list.GetId())
         
@@ -283,15 +283,16 @@ class MyFrame(wx.Frame):
     
     
     def onOpenFile(self, event):
-        self.film_list.Clear()
-        self.film_id_list = []
-        films_not_found = []
+
         with wx.FileDialog(self, "Открыть файл...", "", "", "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*", style=wx.FD_OPEN |
                            wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             path_name = fileDialog.GetPath()
             films_from_file = kl.file_to_list(path_name)
+            self.film_list.Clear()
+            self.film_id_list = []
+            films_not_found = []
             self.gauge = wx.Gauge(self.statusbar, range = len(films_from_file),
                                   pos = (90, 2), size = (self.statusbar.GetSize()[0] - 95, 20),
                                   style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
