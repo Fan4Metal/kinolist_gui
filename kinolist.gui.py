@@ -57,7 +57,7 @@ class InfoPanel(wx.Dialog):
         else:
             cast = f"{filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
         self.l_search2 = wx.StaticText(self.panel, label = cast)
-        self.l_search3 = wx.TextCtrl(self.panel, value = filminfo[4], style = wx.TE_READONLY | wx.ALIGN_TOP | wx.TE_MULTILINE)
+        self.l_search3 = wx.TextCtrl(self.panel, value = filminfo[4] if filminfo[4] else "Нет описания", style = wx.TE_READONLY | wx.ALIGN_TOP | wx.TE_MULTILINE)
         self.box3v.Add(self.l_search1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.box3v.Add(self.l_search2, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.box3v.Add(self.l_search3, proportion = 1, flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
