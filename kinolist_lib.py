@@ -243,7 +243,7 @@ def find_kp_id3(film: str, api: str):
         return result
 
 
-def find_kp_id4(film_list: list, api: str):
+def find_kp_id4(film: str, api: str):
     """Gets list of kinopoisk ids for list of films
 
     Args:
@@ -255,51 +255,41 @@ def find_kp_id4(film_list: list, api: str):
                  0. list of found kinopoisk ids
                  1. list of items that have not been found
     """
-    film_codes = []
-    film_not_found = []
-    for film in film_list:
-
-        code_in_name = find_kp_id_in_title(film)
-        if code_in_name:
-            try:
-                film_info = get_film_info(code_in_name, api)
-                log.info(f'Найден фильм: {film_info[0]} ({film_info[1]}), kinopoisk id: {code_in_name}')
-                film_codes.append((code_in_name, film_info[0], film_info[1]))
-                continue
-            except Exception:
-                film_not_found.append(code_in_name)
-                continue
-        # time.sleep(0.2)
-        payload = {'keyword': film, 'page': 1}
-        headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
+    code_in_name = find_kp_id_in_title(film)
+    if code_in_name:
         try:
-            r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
-                             headers=headers,
-                             params=payload)
-            if r.status_code == 200:
-                resp_json = r.json()
-                if resp_json['searchFilmsCountResult'] == 0:
-                    log.info(f'{film} не найден')
-                    film_not_found.append(film)
-                    continue
-                else:
-                    id = resp_json['films'][0]['filmId']
-                    year = resp_json['films'][0]['year']
-                    if 'nameRu' in resp_json['films'][0]:
-                        found_film = resp_json['films'][0]['nameRu']
-                    else:
-                        found_film = resp_json['films'][0]['nameEn']
-                    log.info(f'Найден фильм: {found_film} ({year}), kinopoisk id: {id}')
-                    film_codes.append((id, found_film, year))
+            film_info = get_film_info(code_in_name, api)
+            log.info(f'Найден фильм: {film_info[0]} ({film_info[1]}), kinopoisk id: {code_in_name}')
+            return code_in_name, film_info[0], film_info[1]
+        except Exception:
+            return None
+    payload = {'keyword': film, 'page': 1}
+    headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
+    try:
+        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
+                            headers=headers,
+                            params=payload)
+        if r.status_code == 200:
+            resp_json = r.json()
+            if resp_json['searchFilmsCountResult'] == 0:
+                log.info(f'{film} не найден')
+                return None
             else:
-                log.warning('Ошибка доступа к https://kinopoiskapiunofficial.tech')
-                return
-        except Exception as e:
-            log.warning("Exeption:", str(e))
-            log.info(f'{film} не найден (exeption)')
-            film_not_found.append(film)
-            continue
-    return [film_codes, film_not_found]
+                id = resp_json['films'][0]['filmId']
+                year = resp_json['films'][0]['year']
+                if 'nameRu' in resp_json['films'][0]:
+                    found_film = resp_json['films'][0]['nameRu']
+                else:
+                    found_film = resp_json['films'][0]['nameEn']
+                log.info(f'Найден фильм: {found_film} ({year}), kinopoisk id: {id}')
+                return id, found_film, year
+        else:
+            log.warning('Ошибка доступа к https://kinopoiskapiunofficial.tech')
+            return
+    except Exception as e:
+        log.warning("Exeption:", str(e))
+        log.info(f'{film} не найден (exeption)')
+        return None
 
 
 def get_film_info(film_code, api, shorten=False):

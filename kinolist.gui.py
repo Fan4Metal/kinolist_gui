@@ -99,58 +99,58 @@ class MyFrame(wx.Frame):
         
 
         # ========== Основные элементы ==========
-        panel = wx.Panel(self)
-        gr = wx.GridBagSizer(7, 3)
+        self.panel = wx.Panel(self)
+        self.gr = wx.GridBagSizer(7, 3)
         
-        self.l_search = wx.StaticText(panel, label='Фильм')
-        gr.Add(self.l_search, pos=(0, 0), flag = wx.TOP | wx.BOTTOM | wx.LEFT, border = 10)
+        self.l_search = wx.StaticText(self.panel, label='Фильм')
+        self.gr.Add(self.l_search, pos=(0, 0), flag = wx.TOP | wx.BOTTOM | wx.LEFT, border = 10)
         
-        self.t_search = wx.TextCtrl(panel, style=wx.TE_PROCESS_ENTER)
-        gr.Add(self.t_search, pos=(0, 1), flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT, border = 5)
+        self.t_search = wx.TextCtrl(self.panel, style=wx.TE_PROCESS_ENTER)
+        self.gr.Add(self.t_search, pos=(0, 1), flag = wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_TEXT_ENTER, self.onEnter)
         # self.t_search.Value = "Матрица"
         
-        self.b_search = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Поиск')
-        gr.Add(self.b_search, pos=(0, 2), flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_search = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Поиск')
+        self.gr.Add(self.b_search, pos=(0, 2), flag = wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSearch, id=self.b_search.GetId())
         
-        self.search_list = wx.ListBox(panel, wx.ID_ANY, size=(200, 70), style = wx.LB_SINGLE)
-        gr.Add(self.search_list, pos=(1, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)  
+        self.search_list = wx.ListBox(self.panel, wx.ID_ANY, size=(200, 70), style = wx.LB_SINGLE)
+        self.gr.Add(self.search_list, pos=(1, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)  
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onAdd, id=self.search_list.GetId())
         self.search_list.Bind(wx.EVT_KEY_DOWN, self.onListEnter)
         self.Bind(wx.EVT_LISTBOX, self.ListClick1, id=self.search_list.GetId())
         
-        self.film_list = wx.ListBox(panel, wx.ID_ANY, style = wx.LB_SINGLE)
-        gr.Add(self.film_list, pos=(2, 1), span=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
+        self.film_list = wx.ListBox(self.panel, wx.ID_ANY, style = wx.LB_SINGLE)
+        self.gr.Add(self.film_list, pos=(2, 1), span=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
         self.Bind(wx.EVT_LISTBOX, self.ListClick2, id=self.film_list.GetId())
         
-        self.b_add = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Добавить')
-        gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_add = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Добавить')
+        self.gr.Add(self.b_add, pos=(1, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onAdd, id=self.b_add.GetId())
         
-        self.b_info = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Информация')
-        gr.Add(self.b_info, pos=(2, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_info = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Информация')
+        self.gr.Add(self.b_info, pos=(2, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onInfo, id=self.b_info.GetId())
         
-        self.b_delete = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='Удалить')
-        gr.Add(self.b_delete, pos=(3, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_delete = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Удалить')
+        self.gr.Add(self.b_delete, pos=(3, 2), flag = wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onDelete, id=self.b_delete.GetId())
         
-        self.b_up = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='\u21e7')
-        gr.Add(self.b_up, pos=(4, 2), flag = wx.ALIGN_CENTER | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_up = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='\u21e7')
+        self.gr.Add(self.b_up, pos=(4, 2), flag = wx.ALIGN_CENTER | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onUp, id=self.b_up.GetId())
         
-        self.b_down = wx.Button(panel, wx.ID_ANY, size=(100, 25), label='\u21e9')
-        gr.Add(self.b_down, pos=(5, 2), flag = wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.b_down = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='\u21e9')
+        self.gr.Add(self.b_down, pos=(5, 2), flag = wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onDown, id=self.b_down.GetId())
         
-        self.b_save = wx.Button(panel, wx.ID_ANY, label='Сохранить в формате docx')
-        gr.Add(self.b_save, pos=(6, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
+        self.b_save = wx.Button(self.panel, wx.ID_ANY, label='Сохранить в формате docx')
+        self.gr.Add(self.b_save, pos=(6, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSave, id=self.b_save.GetId())
                 
-        gr.AddGrowableCol(1)
-        gr.AddGrowableRow(5)
-        panel.SetSizer(gr)
+        self.gr.AddGrowableCol(1)
+        self.gr.AddGrowableRow(5)
+        self.panel.SetSizer(self.gr)
         self.Centre()
         
         
@@ -221,7 +221,6 @@ class MyFrame(wx.Frame):
     def onSave(self, event):
         if self.film_id_list:
             kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
-            
             reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
             word_path = get_reg("path", reg_path) + "winword.exe"
             if os.path.exists(word_path):
@@ -273,11 +272,11 @@ class MyFrame(wx.Frame):
         info.SetCopyright('(C) 2022 Alexander Vanyunin')
         info.SetLicence(licence)
         # info.SetIcon(wx.Icon('hunter.png', wx.BITMAP_TYPE_PNG))
-        # info.SetWebSite('http://www.zetcode.com')
+        # info.SetWebSite('')
         # info.AddDeveloper('Alexander Vanyunin')
-        # info.AddDocWriter('Jan Bodnar')
-        # info.AddArtist('The Tango crew')
-        # info.AddTranslator('Jan Bodnar')
+        # info.AddDocWriter('')
+        # info.AddArtist('')
+        # info.AddTranslator('')
 
         wx.adv.AboutBox(info)
     
@@ -285,22 +284,35 @@ class MyFrame(wx.Frame):
     def onOpenFile(self, event):
         self.film_list.Clear()
         self.film_id_list = []
+        films_not_found = []
         with wx.FileDialog(self, "Открыть файл...", "", "", "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*", style=wx.FD_OPEN |
                            wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             path_name = fileDialog.GetPath()
             films_from_file = kl.file_to_list(path_name)
-            found_films, films_not_found = kl.find_kp_id4(films_from_file, api)
+            self.gauge = wx.Gauge(self.statusbar, range = len(films_from_file), pos = (90, 2), size = (self.statusbar.GetSize()[0] - 90, 20), style=wx.GA_HORIZONTAL)
+            self.count = 0
+            for film in films_from_file:
+                foundfilm = kl.find_kp_id4(film, api)
+                if foundfilm:
+                    self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
+                    self.panel.Refresh()
+                    self.panel.Update()
+                    self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+                    self.film_id_list.append(foundfilm[0])
+                    self.count += 1
+                    self.gauge.SetValue(self.count)
+                else:
+                    films_not_found.append(film)
+                    self.count += 1
+                    self.gauge.SetValue(self.count)
             if films_not_found:
                 text_not_found = '\n'.join(films_not_found)
                 text = f"Следующие фильмы не найдены:\n{text_not_found}"
                 wx.MessageBox(text, 'Внимание!')
-            if found_films:
-                for item in found_films:
-                    self.film_list.Append(f"{item[1]} ({item[2]})")
-                    self.film_id_list.append(item[0])
-                self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+            self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+            self.gauge.Destroy()
                     
                     
     def onSaveFile(self, event):
@@ -310,7 +322,6 @@ class MyFrame(wx.Frame):
                 if fileDialog.ShowModal() == wx.ID_CANCEL:
                     return
                 path_name = fileDialog.GetPath()
-                print(path_name) 
                 with open(path_name, "w", encoding="utf-8") as f:
                     for item in items_list:
                         f.write(item + "\n")
