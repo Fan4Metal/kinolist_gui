@@ -164,6 +164,7 @@ class MyFrame(wx.Frame):
         # wx.EVT_MENU_HIGHLIGHT_ALL(self, self.statusbar_status)
         wx.EvtHandler.Bind(self, wx.EVT_MENU_HIGHLIGHT_ALL, self.statusbar_status)
         
+        
     def statusbar_status(self, event):
         pass
     
@@ -221,7 +222,11 @@ class MyFrame(wx.Frame):
             
     def onSave(self, event):
         if self.film_id_list:
-            kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api)
+            self.gauge = wx.Gauge(self.statusbar, range = 100,
+                                    pos = (90, 2), size = (self.statusbar.GetSize()[0] - 95, 20),
+                                    style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
+            kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api, progbar=self.gauge)
+            self.gauge.Destroy()
             reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
             word_path = get_reg("path", reg_path) + "winword.exe"
             if os.path.exists(word_path):
@@ -283,7 +288,6 @@ class MyFrame(wx.Frame):
     
     
     def onOpenFile(self, event):
-
         with wx.FileDialog(self, "Открыть файл...", "", "", "Текстовые файлы (*.txt)|*.txt|Все файлы (*.*)|*.*", style=wx.FD_OPEN |
                            wx.FD_FILE_MUST_EXIST) as fileDialog:
             if fileDialog.ShowModal() == wx.ID_CANCEL:
@@ -302,14 +306,12 @@ class MyFrame(wx.Frame):
                 foundfilm = kl.find_kp_id4(film, api)
                 if foundfilm:
                     self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
-                    self.panel.Refresh()
                     self.panel.Update()
                     self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
                     self.film_id_list.append(foundfilm[0])
-                    counter = counter + 1
+                    counter += 1
                     self.gauge.SetValue(counter)
                     
-                    print(self.gauge.GetValue())
                 else:
                     films_not_found.append(film)
                     counter = counter + 1

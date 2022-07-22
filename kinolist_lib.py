@@ -8,6 +8,7 @@ import textwrap
 import time
 from copy import deepcopy
 from pathlib import Path
+import wx
 
 from requests import get
 from docx import Document
@@ -378,7 +379,7 @@ def get_film_info(film_code, api, shorten=False):
     return result
 
 
-def get_full_film_list(film_codes: list, api: str, shorten=False):
+def get_full_film_list(film_codes: list, api: str, shorten=False, progbar:wx.Gauge=None):
     """Загружает информацию о фильмах
 
     Args:
@@ -389,10 +390,18 @@ def get_full_film_list(film_codes: list, api: str, shorten=False):
         list: Список с полной информацией о фильмах для записи в таблицу.
     """
     full_films_list = []
+    if progbar:
+        progbar.SetRange(len(film_codes))
+        counter = 0
+        progbar.SetValue(counter)
+
     for film_code in tqdm(film_codes, desc="Загрузка информации...   "):
         try:
             film_info = get_film_info(film_code, api, shorten)
             full_films_list.append(film_info)
+            if progbar:
+                counter += 1
+                progbar.SetValue(counter)
         except Exception as e:
             log.warning("Exeption:", str(e))
         else:
@@ -461,7 +470,7 @@ def write_film_to_table(current_table, filminfo: list):
     run.add_picture(image_to_file(filminfo[9]), width=Cm(7))
 
 
-def write_all_films_to_docx(document, films: list, path: str):
+def write_all_films_to_docx(document, films: list, path: str, progbar:wx.Gauge=None):
     """Записывает информацию о фильмах в таблицы файла docx
 
     Args:
@@ -473,9 +482,18 @@ def write_all_films_to_docx(document, films: list, path: str):
     table_num = len(films)
     if table_num > 1:
         clone_first_table(document, table_num - 1)
+    
+    if progbar:
+        progbar.SetRange(table_num)    
+        counter = 0
+        progbar.SetValue(counter)
+        
     for i in tqdm(range(table_num), desc="Запись в таблицу...      "):
         current_table = document.tables[i]
         write_film_to_table(current_table, films[i])
+        if progbar:
+            counter += 1
+            progbar.SetValue(counter)
     try:
         document.save(path)
         log.info(f'Файл "{path}" создан.')
@@ -557,11 +575,11 @@ def docx_to_pdf_libre(file_in):
     return code_exit
 
 
-def make_docx(kp_id_list: list, output: str, template: str, api: str, shorten: bool = False):
+def make_docx(kp_id_list: list, output: str, template: str, api: str, /, shorten: bool = False, progbar:wx.Gauge = None):
     file_path = get_resource_path(template)
     doc = Document(file_path)
-    full_list = get_full_film_list(kp_id_list, api, shorten)
-    write_all_films_to_docx(doc, full_list, output)
+    full_list = get_full_film_list(kp_id_list, api, shorten, progbar=progbar)
+    write_all_films_to_docx(doc, full_list, output, progbar=progbar)
 
 
 def rename_torrents(api: str, path=""):
