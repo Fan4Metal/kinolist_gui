@@ -7,7 +7,7 @@ import config
 
 api = config.KINOPOISK_API_TOKEN
 
-VER = "0.2.1"
+VER = "0.3.1"
 # APP_EXIT = 1
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
 
@@ -100,7 +100,7 @@ class MyFrame(wx.Frame):
 
         # ========== Основные элементы ==========
         self.panel = wx.Panel(self)
-        self.gr = wx.GridBagSizer(7, 3)
+        self.gr = wx.GridBagSizer(8, 3)
         
         self.l_search = wx.StaticText(self.panel, label='Фильм')
         self.gr.Add(self.l_search, pos=(0, 0), flag = wx.TOP | wx.BOTTOM | wx.LEFT, border = 10)
@@ -121,7 +121,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_LISTBOX, self.ListClick1, id=self.search_list.GetId())
         
         self.film_list = wx.ListBox(self.panel, wx.ID_ANY, style = wx.LB_SINGLE)
-        self.gr.Add(self.film_list, pos=(2, 1), span=(4, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
+        self.gr.Add(self.film_list, pos=(2, 1), span=(5, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)        
         self.Bind(wx.EVT_LISTBOX, self.ListClick2, id=self.film_list.GetId())
         self.Bind(wx.EVT_LISTBOX_DCLICK, self.onInfo, id=self.film_list.GetId())
         
@@ -145,12 +145,18 @@ class MyFrame(wx.Frame):
         self.gr.Add(self.b_down, pos=(5, 2), flag = wx.ALIGN_CENTER_HORIZONTAL | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onDown, id=self.b_down.GetId())
         
+        
+        self.b_clear = wx.Button(self.panel, wx.ID_ANY, size=(100, 25), label='Очистить все')
+        self.gr.Add(self.b_clear, pos=(6, 2), flag = wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_BOTTOM | wx.BOTTOM | wx.LEFT | wx.RIGHT, border = 5)
+        self.Bind(wx.EVT_BUTTON, self.onClear, id=self.b_clear.GetId())
+        
+        
         self.b_save = wx.Button(self.panel, wx.ID_ANY, label='Сохранить в формате docx')
-        self.gr.Add(self.b_save, pos=(6, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
+        self.gr.Add(self.b_save, pos=(7, 1), flag = wx.EXPAND | wx.BOTTOM | wx.LEFT, border = 5)
         self.Bind(wx.EVT_BUTTON, self.onSave, id=self.b_save.GetId())
                 
         self.gr.AddGrowableCol(1)
-        self.gr.AddGrowableRow(5)
+        self.gr.AddGrowableRow(6)
         self.panel.SetSizer(self.gr)
         self.Centre()
         
@@ -277,7 +283,7 @@ class MyFrame(wx.Frame):
         info.SetDescription(description)
         info.SetCopyright('(C) 2022 Alexander Vanyunin')
         info.SetLicence(licence)
-        # info.SetIcon(wx.Icon('hunter.png', wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon('favicon.png', wx.BITMAP_TYPE_PNG))
         # info.SetWebSite('')
         # info.AddDeveloper('Alexander Vanyunin')
         # info.AddDocWriter('')
@@ -334,10 +340,17 @@ class MyFrame(wx.Frame):
                 with open(path_name, "w", encoding="utf-8") as f:
                     for item in items_list:
                         f.write(item + "\n")
-        
+    
+    def onClear(self, event):
+        self.film_list.Clear()
+        self.film_id_list = []
+        self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+
+
 def main():
     app = wx.App()
     top = MyFrame(None, title = "Kinolist GUI")
+    top.SetIcon(wx.Icon("favicon.ico"))
     top.Show()
     app.MainLoop()
 
