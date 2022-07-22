@@ -2,7 +2,6 @@ import os
 import winreg
 import threading
 import time
-# import wx.lib.newevent
 
 import wx
 import wx.adv
@@ -13,8 +12,6 @@ api = config.KINOPOISK_API_TOKEN
 
 VER = "0.3.2"
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
-
-# progress_event, EVT_PROGRESS_EVENT = wx.lib.newevent.NewEvent()
 
 
 def PIL2wx (image):
@@ -244,7 +241,12 @@ class MyFrame(wx.Frame):
             
     def onSave(self, event):
         if self.film_id_list:
-            self.thr = threading.Thread(target=self.thread_function, args=(self.film_id_list, 'list.docx', 'template.docx', api, False, self.gauge))
+            with wx.FileDialog(self, "Сохранить файл...", "", "", "Microsoft Word (*.docx)|*.docx", style=wx.FD_SAVE) as fileDialog:
+                if fileDialog.ShowModal() == wx.ID_CANCEL:
+                    return
+                path_name = fileDialog.GetPath()           
+            
+            self.thr = threading.Thread(target=self.thread_function, args=(self.film_id_list, path_name, 'template.docx', api, False, self.gauge))
             self.thr.start()
             while self.thr.is_alive():
                 time.sleep(0.1)
@@ -255,7 +257,7 @@ class MyFrame(wx.Frame):
             reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
             word_path = get_reg("path", reg_path) + "winword.exe"
             if os.path.exists(word_path):
-                os.system(f'start "{word_path}" list.docx')
+                os.system(f'start "{word_path}" "{path_name}"')
  
     
     def onInfo(self, event):
@@ -311,6 +313,7 @@ class MyFrame(wx.Frame):
     @staticmethod
     def open_thread_func(self, films_from_file):
         counter = 0
+        self.films_not_found = []
         for film in films_from_file:
             foundfilm = kl.find_kp_id4(film, api)
             if foundfilm:
@@ -378,6 +381,7 @@ def main():
     top.SetIcon(wx.Icon(kl.get_resource_path("favicon.ico")))
     top.Show()
     app.MainLoop()
+
 
 if __name__ == '__main__':
     main()
