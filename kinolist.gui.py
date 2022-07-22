@@ -283,7 +283,7 @@ class MyFrame(wx.Frame):
         info.SetDescription(description)
         info.SetCopyright('(C) 2022 Alexander Vanyunin')
         info.SetLicence(licence)
-        info.SetIcon(wx.Icon('favicon.png', wx.BITMAP_TYPE_PNG))
+        info.SetIcon(wx.Icon(kl.get_resource_path("favicon.png"), wx.BITMAP_TYPE_PNG))
         # info.SetWebSite('')
         # info.AddDeveloper('Alexander Vanyunin')
         # info.AddDocWriter('')
@@ -350,7 +350,7 @@ class MyFrame(wx.Frame):
 def main():
     app = wx.App()
     top = MyFrame(None, title = "Kinolist GUI")
-    top.SetIcon(wx.Icon("favicon.ico"))
+    top.SetIcon(wx.Icon(kl.get_resource_path("favicon.ico")))
     top.Show()
     app.MainLoop()
 
