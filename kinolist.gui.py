@@ -1,5 +1,9 @@
 import os
 import winreg
+import threading
+import time
+# import wx.lib.newevent
+
 import wx
 import wx.adv
 import kinolist_lib as kl
@@ -7,9 +11,11 @@ import config
 
 api = config.KINOPOISK_API_TOKEN
 
-VER = "0.3.1"
-# APP_EXIT = 1
+VER = "0.3.2"
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
+
+# progress_event, EVT_PROGRESS_EVENT = wx.lib.newevent.NewEvent()
+
 
 def PIL2wx (image):
     width, height = image.size
@@ -64,6 +70,7 @@ class InfoPanel(wx.Dialog):
         
         self.panel.SetSizer(self.box1v)
         self.Centre()
+
 
 class MyFrame(wx.Frame):
     def __init__(self, parent, title):
@@ -169,6 +176,10 @@ class MyFrame(wx.Frame):
         # Перехват события наведения на пункт меню, чтобы отключить автоматический показ подсказок в статусбаре
         # wx.EVT_MENU_HIGHLIGHT_ALL(self, self.statusbar_status)
         wx.EvtHandler.Bind(self, wx.EVT_MENU_HIGHLIGHT_ALL, self.statusbar_status)
+                
+        self.gauge = wx.Gauge(self.statusbar, range = 100,
+                                pos = (91, 2), size = (self.statusbar.GetSize()[0] - 92, 20),
+                                style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
         
         
     def statusbar_status(self, event):
@@ -225,14 +236,22 @@ class MyFrame(wx.Frame):
                 self.film_list.SetSelection(0)
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
    
+   
+    @staticmethod
+    def thread_function(kp_id_list: list, output: str, template: str, api: str, shorten: bool = False, progbar:wx.Gauge = None):
+        kl.make_docx(kp_id_list, output, template, api, shorten, progbar)
+   
             
     def onSave(self, event):
         if self.film_id_list:
-            self.gauge = wx.Gauge(self.statusbar, range = 100,
-                                    pos = (90, 2), size = (self.statusbar.GetSize()[0] - 95, 20),
-                                    style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
-            kl.make_docx(self.film_id_list, 'list.docx', 'template.docx', api, progbar=self.gauge)
-            self.gauge.Destroy()
+            self.thr = threading.Thread(target=self.thread_function, args=(self.film_id_list, 'list.docx', 'template.docx', api, False, self.gauge))
+            self.thr.start()
+            while self.thr.is_alive():
+                time.sleep(0.1)
+                wx.GetApp().Yield()
+                continue
+            self.gauge.SetValue(0)
+            
             reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
             word_path = get_reg("path", reg_path) + "winword.exe"
             if os.path.exists(word_path):
@@ -286,11 +305,26 @@ class MyFrame(wx.Frame):
         info.SetIcon(wx.Icon(kl.get_resource_path("favicon.png"), wx.BITMAP_TYPE_PNG))
         # info.SetWebSite('')
         # info.AddDeveloper('Alexander Vanyunin')
-        # info.AddDocWriter('')
-        # info.AddArtist('')
-        # info.AddTranslator('')
-
         wx.adv.AboutBox(info)
+    
+    
+    @staticmethod
+    def open_thread_func(self, films_from_file):
+        counter = 0
+        for film in films_from_file:
+            foundfilm = kl.find_kp_id4(film, api)
+            if foundfilm:
+                self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
+                self.panel.Update()
+                self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+                self.film_id_list.append(foundfilm[0])
+                counter += 1
+                self.gauge.SetValue(counter)
+                
+            else:
+                self.films_not_found.append(film)
+                counter = counter + 1
+                self.gauge.SetValue(counter)
     
     
     def onOpenFile(self, event):
@@ -303,31 +337,22 @@ class MyFrame(wx.Frame):
             self.film_list.Clear()
             self.film_id_list = []
             films_not_found = []
-            self.gauge = wx.Gauge(self.statusbar, range = len(films_from_file),
-                                  pos = (90, 2), size = (self.statusbar.GetSize()[0] - 95, 20),
-                                  style=wx.GA_HORIZONTAL|wx.GA_PROGRESS|wx.GA_SMOOTH)
-            counter = 0
-            self.gauge.SetValue(counter)
-            for film in films_from_file:
-                foundfilm = kl.find_kp_id4(film, api)
-                if foundfilm:
-                    self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
-                    self.panel.Update()
-                    self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-                    self.film_id_list.append(foundfilm[0])
-                    counter += 1
-                    self.gauge.SetValue(counter)
-                    
-                else:
-                    films_not_found.append(film)
-                    counter = counter + 1
-                    self.gauge.SetValue(counter)
+            self.gauge.SetRange(len(films_from_file))
+            self.gauge.SetValue(0)
+
+            open_thr = threading.Thread(target=self.open_thread_func, args=(self, films_from_file))
+            open_thr.start()
+            while open_thr.is_alive():
+                time.sleep(0.1)
+                wx.GetApp().Yield()
+                continue
+
             if films_not_found:
                 text_not_found = '\n'.join(films_not_found)
                 text = f"Следующие фильмы не найдены:\n{text_not_found}"
                 wx.MessageBox(text, 'Внимание!')
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-            self.gauge.Destroy()
+            self.gauge.SetValue(0)
                     
                     
     def onSaveFile(self, event):
