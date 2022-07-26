@@ -378,9 +378,10 @@ class MyFrame(wx.Frame):
                 return
             path_name = fileDialog.GetPath()
             films_from_file = kl.file_to_list(path_name)
+            films_from_file = [line.strip() for line in films_from_file if line ]
             self.film_list.Clear()
             self.film_id_list = []
-            films_not_found = []
+            self.films_not_found = []
             self.gauge.SetRange(len(films_from_file))
             self.gauge.SetValue(0)
 
