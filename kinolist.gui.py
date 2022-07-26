@@ -13,7 +13,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 api = config.KINOPOISK_API_TOKEN
 
-VER = "0.3.3"
+VER = "0.3.4"
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
 
 
@@ -30,6 +30,28 @@ def get_reg(name, reg_path):
         return value
     except WindowsError:
         return None
+
+
+class NotFoundPanel(wx.Dialog):
+
+    def __init__(self, parent, title, not_found: list):
+        super().__init__(parent, title=title)
+
+        self.panel = wx.Panel(self)
+        self.box1v = wx.BoxSizer(wx.VERTICAL)
+        self.label1 = wx.StaticText(self.panel, label="Следующие фильмы не найдены!")
+        self.list_notfound = wx.TextCtrl(self.panel,
+                                         value="\n".join(not_found),
+                                         style=wx.TE_READONLY | wx.ALIGN_TOP | wx.TE_MULTILINE)
+        self.btn = wx.Button(self.panel, wx.ID_OK, label="OK", size=self.FromDIP((100, 25)))
+
+        self.box1v.Add(self.label1, flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
+        self.box1v.Add(self.list_notfound,
+                       proportion=1,
+                       flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT,
+                       border=5)
+        self.box1v.Add(self.btn, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
+        self.panel.SetSizer(self.box1v)
 
 
 class InfoPanel(wx.Dialog):
@@ -78,7 +100,6 @@ class InfoPanel(wx.Dialog):
         self.box3v.Add(self.l_search3, proportion=1, flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
 
         self.panel.SetSizer(self.box1v)
-        self.Centre()
 
 
 class MyFrame(wx.Frame):
@@ -370,10 +391,12 @@ class MyFrame(wx.Frame):
                 wx.GetApp().Yield()
                 continue
 
-            if films_not_found:
-                text_not_found = '\n'.join(films_not_found)
-                text = f"Следующие фильмы не найдены:\n{text_not_found}"
-                wx.MessageBox(text, 'Внимание!')
+            if self.films_not_found:
+                self.notfoundpanel = NotFoundPanel(self, "Внимание!", self.films_not_found)
+                self.notfoundpanel.SetClientSize(self.notfoundpanel.FromDIP(wx.Size((300, 200))))
+                self.notfoundpanel.CentreOnParent()
+                self.notfoundpanel.ShowModal()
+
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
             self.gauge.SetValue(0)
 
