@@ -11,7 +11,7 @@ import config
 import kinolist_lib as kl
 
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
-api = config.KINOPOISK_API_TOKEN
+API = config.KINOPOISK_API_TOKEN
 
 VER = "0.3.4"
 REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
@@ -58,7 +58,7 @@ class InfoPanel(wx.Dialog):
 
     def __init__(self, parent, title, id):
         super().__init__(parent, title=title)
-        filminfo = kl.get_film_info(id, api)
+        filminfo = kl.get_film_info(id, API)
 
         poster = filminfo[9]
         poster.thumbnail(self.FromDIP((200, 300)))
@@ -227,7 +227,7 @@ class MyFrame(wx.Frame):
         self.films = []
         self.search_list.Clear()
         if self.t_search.Value:
-            self.films = kl.find_kp_id3(self.t_search.Value, api)
+            self.films = kl.find_kp_id3(self.t_search.Value, API)
             if self.films:
                 for film in self.films:
                     self.search_list.Append(f'{film[1]} ({film[2]})')
@@ -280,7 +280,7 @@ class MyFrame(wx.Frame):
                 path_name = fileDialog.GetPath()
 
             self.thr = threading.Thread(target=self.thread_function,
-                                        args=(self.film_id_list, path_name, 'template.docx', api, False, self.gauge))
+                                        args=(self.film_id_list, path_name, 'template.docx', API, False, self.gauge))
             self.thr.start()
             while self.thr.is_alive():
                 time.sleep(0.1)
@@ -353,7 +353,7 @@ class MyFrame(wx.Frame):
         counter = 0
         self.films_not_found = []
         for film in films_from_file:
-            foundfilm = kl.find_kp_id4(film, api)
+            foundfilm = kl.find_kp_id4(film, API)
             if foundfilm:
                 self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
                 self.panel.Update()
@@ -378,7 +378,7 @@ class MyFrame(wx.Frame):
                 return
             path_name = fileDialog.GetPath()
             films_from_file = kl.file_to_list(path_name)
-            films_from_file = [line.strip() for line in films_from_file if line ]
+            films_from_file = [line.strip() for line in films_from_file if line]
             self.film_list.Clear()
             self.film_id_list = []
             self.films_not_found = []
