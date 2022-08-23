@@ -14,7 +14,6 @@ ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
 VER = "0.3.4"
-REG_PATH = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
 
 
 def PIL2wx(image):
@@ -288,8 +287,8 @@ class MyFrame(wx.Frame):
                 continue
             self.gauge.SetValue(0)
 
-            reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
-            word_path = get_reg("path", reg_path) + "winword.exe"
+            word_reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
+            word_path = get_reg("path", word_reg_path) + "winword.exe"
             if os.path.exists(word_path):
                 os.system(f'start "{word_path}" "{path_name}"')
 
@@ -344,8 +343,6 @@ class MyFrame(wx.Frame):
         info.SetCopyright('(C) 2022 Alexander Vanyunin')
         info.SetLicence(licence)
         info.SetIcon(wx.Icon(kl.get_resource_path("favicon.png"), wx.BITMAP_TYPE_PNG))
-        # info.SetWebSite('')
-        # info.AddDeveloper('Alexander Vanyunin')
         wx.adv.AboutBox(info)
 
     @staticmethod

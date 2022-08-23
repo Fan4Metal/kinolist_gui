@@ -8,7 +8,7 @@ import textwrap
 import time
 from copy import deepcopy
 from pathlib import Path
-import wx
+# import wx
 
 from requests import get
 from docx import Document
@@ -21,7 +21,7 @@ from PIL import Image
 from tqdm import tqdm
 import PTN
 
-LIB_VER = "0.2.19"
+LIB_VER = "0.2.23"
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
@@ -379,7 +379,7 @@ def get_film_info(film_code, api, shorten=False):
     return result
 
 
-def get_full_film_list(film_codes: list, api: str, shorten=False, progbar:wx.Gauge=None):
+def get_full_film_list(film_codes: list, api: str, shorten=False, progbar=None):
     """Загружает информацию о фильмах
 
     Args:
@@ -470,7 +470,7 @@ def write_film_to_table(current_table, filminfo: list):
     run.add_picture(image_to_file(filminfo[9]), width=Cm(7))
 
 
-def write_all_films_to_docx(document, films: list, path: str, progbar:wx.Gauge=None):
+def write_all_films_to_docx(document, films: list, path: str, progbar=None):
     """Записывает информацию о фильмах в таблицы файла docx
 
     Args:
@@ -575,7 +575,7 @@ def docx_to_pdf_libre(file_in):
     return code_exit
 
 
-def make_docx(kp_id_list: list, output: str, template: str, api: str, /, shorten: bool = False, progbar:wx.Gauge = None):
+def make_docx(kp_id_list: list, output: str, template: str, api: str, /, shorten: bool=False, progbar=None):
     file_path = get_resource_path(template)
     doc = Document(file_path)
     full_list = get_full_film_list(kp_id_list, api, shorten, progbar=progbar)
