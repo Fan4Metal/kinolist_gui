@@ -13,7 +13,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.3.4"
+VER = "0.4.1"
 
 
 def PIL2wx(image):
@@ -114,6 +114,7 @@ class MyFrame(wx.Frame):
         # ========== Меню ==========
         menubar = wx.MenuBar()
 
+        # меню "Файл"
         fileMenu = wx.Menu()
         item_open = wx.MenuItem(fileMenu, wx.ID_OPEN, "Открыть файл\tCtrl+O")
         item_save = wx.MenuItem(fileMenu, wx.ID_SAVE, "Сохранить файл\tCtrl+S")
@@ -124,6 +125,15 @@ class MyFrame(wx.Frame):
         fileMenu.Append(item_exit)
         menubar.Append(fileMenu, "Файл")
 
+        # меню "Список"
+        listMenu = wx.Menu()
+        item_remove_dupl = wx.MenuItem(listMenu, wx.ID_ANY, "Удалить дубликаты")
+        item_reverse = wx.MenuItem(listMenu, wx.ID_ANY, "Обратный порядок")
+        listMenu.Append(item_remove_dupl)
+        listMenu.Append(item_reverse)
+        menubar.Append(listMenu, "Список")
+        
+        # менею "Справка"
         infoMenu = wx.Menu()
         item_about = wx.MenuItem(fileMenu, wx.ID_ANY, "О программе")
         infoMenu.Append(item_about)
@@ -131,10 +141,13 @@ class MyFrame(wx.Frame):
 
         self.SetMenuBar(menubar)
 
+        # биндинг обработчиков пунктов меню
         self.Bind(wx.EVT_MENU, self.onQuit, id=wx.ID_EXIT)
         self.Bind(wx.EVT_MENU, self.onOpenFile, id=wx.ID_OPEN)
         self.Bind(wx.EVT_MENU, self.onSaveFile, id=wx.ID_SAVE)
         self.Bind(wx.EVT_MENU, self.onAboutBox, id=item_about.GetId())
+        self.Bind(wx.EVT_MENU, self.onRemoveDupl, id=item_remove_dupl.GetId())
+        self.Bind(wx.EVT_MENU, self.onReverse, id=item_reverse.GetId())
 
         # ========== Основные элементы ==========
         self.panel = wx.Panel(self)
@@ -249,7 +262,8 @@ class MyFrame(wx.Frame):
             self.search_list.Clear()
             self.t_search.SetFocus()
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-
+            self.film_list.EnsureVisible(self.film_list.GetCount() - 1)
+                
     def onDelete(self, event):
         sel = self.film_list.GetSelection()
         if sel != -1:
@@ -410,10 +424,45 @@ class MyFrame(wx.Frame):
                     for item in items_list:
                         f.write(item + "\n")
 
+
     def onClear(self, event):
         self.film_list.Clear()
         self.film_id_list = []
         self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+        
+    def onRemoveDupl(self, event):
+        l = len(self.film_id_list)
+        dupl = []
+        del_index = []
+        for i in range(l-1):
+            if self.film_list.Items[i] not in dupl:
+                for j in range(i+1, l):
+                    if self.film_id_list[i] == self.film_id_list[j]:
+                        if self.film_list.Items[i] not in dupl:
+                            dupl.append(self.film_list.Items[i])
+                        del_index.append(j)
+        
+        self.film_id_list= [i for j, i in enumerate(self.film_id_list) if j not in del_index]
+        for i in sorted(del_index, reverse=True):
+            self.film_list.Delete(i)
+        self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+        
+        if dupl:
+            wx.MessageDialog(
+                            None,
+                            "Удалены дубликаты следующих фильмов:\n" + "\n".join(dupl),
+                            "Информация",
+                            wx.OK | wx.ICON_INFORMATION
+            ).ShowModal()
+
+    def onReverse(self, event):
+        self.film_id_list.reverse()
+        l = len(self.film_list.Items)
+        for i in range(l // 2):
+            first = self.film_list.GetString(i)
+            second = self.film_list.GetString(l -1 - i)
+            self.film_list.SetString(i, second)
+            self.film_list.SetString(l -1 - i, first)
 
 
 def main():
