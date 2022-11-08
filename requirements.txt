@@ -1,4 +1,3 @@
-aiogram
 python-docx
 kinopoisk-api-unofficial-client
 requests
@@ -7,4 +6,4 @@ docx2pdf
 tqdm
 mutagen
 parse-torrent-title
-wxpyhton310
+wxPython
