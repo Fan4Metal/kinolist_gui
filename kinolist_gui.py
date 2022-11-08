@@ -85,9 +85,9 @@ class InfoPanel(wx.Dialog):
             self.l_search1.Label = f"{filminfo[0]} ({filminfo[1]}) - нет рейтинга"
 
         if len(filminfo[7]) > 1:
-            cast = f"{filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссеры: {', '.join(filminfo[7])}\nВглавных ролях: {', '.join(filminfo[8])}"
+            cast = f"{filminfo[10]}, {filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссеры: {', '.join(filminfo[7])}\nВглавных ролях: {', '.join(filminfo[8])}"
         else:
-            cast = f"{filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
+            cast = f"{filminfo[10]}, {filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
         self.l_search2 = wx.StaticText(self.panel, label=cast)
 
         self.l_search3 = wx.TextCtrl(self.panel,

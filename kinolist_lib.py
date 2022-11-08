@@ -8,7 +8,6 @@ import textwrap
 import time
 from copy import deepcopy
 from pathlib import Path
-# import wx
 
 from requests import get
 from docx import Document
@@ -21,7 +20,7 @@ from PIL import Image
 from tqdm import tqdm
 import PTN
 
-LIB_VER = "0.2.23"
+LIB_VER = "0.2.24"
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
@@ -376,6 +375,7 @@ def get_film_info(film_code, api, shorten=False):
         result.append(rgb_image)
     else:
         result.append("")
+    result.append(response_film.film.name_original)
     return result
 
 
