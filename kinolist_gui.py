@@ -122,6 +122,15 @@ class MyFrame(wx.Frame):
         fileMenu.Append(item_open)
         fileMenu.Append(item_save)
         fileMenu.AppendSeparator()
+
+        tag = wx.Menu()
+        item_write_tag = wx.MenuItem(tag, wx.ID_ANY, 'Записать теги в файлы mp4')
+        item_clear_tag = wx.MenuItem(tag, wx.ID_ANY, 'Удалить теги в файлах mp4')
+        tag.Append(item_write_tag)
+        tag.Append(item_clear_tag)
+        fileMenu.AppendMenu(wx.ID_ANY, 'Теги', tag)
+        fileMenu.AppendSeparator()
+
         fileMenu.Append(item_exit)
         menubar.Append(fileMenu, "Файл")
 
@@ -148,6 +157,8 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAboutBox, id=item_about.GetId())
         self.Bind(wx.EVT_MENU, self.onRemoveDupl, id=item_remove_dupl.GetId())
         self.Bind(wx.EVT_MENU, self.onReverse, id=item_reverse.GetId())
+        self.Bind(wx.EVT_MENU, self.onWritetag, id=item_write_tag.GetId())
+        self.Bind(wx.EVT_MENU, self.onCleartag, id=item_clear_tag.GetId())
 
         # ========== Основные элементы ==========
         self.panel = wx.Panel(self)
@@ -463,6 +474,48 @@ class MyFrame(wx.Frame):
             second = self.film_list.GetString(l -1 - i)
             self.film_list.SetString(i, second)
             self.film_list.SetString(l -1 - i, first)
+            
+    def onWritetag(self, event):
+        print('Запись тегов')
+        with wx.FileDialog(self,
+                            "Открыть файлы...",
+                            "",
+                            "",
+                            "Видео файлы (*.mp4)|*.mp4|Все файлы (*.*)|*.*",
+                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST | wx.FD_MULTIPLE) as fileDialog:
+            if fileDialog.ShowModal() == wx.ID_CANCEL:
+                return
+            paths = fileDialog.GetPaths()
+        print(paths)
+        
+        pass
+    
+    def onCleartag(self, event):
+        print('Очистка тегов')
+        pass
+
+class WriteTags(wx.Dialog):
+
+    def __init__(self, parent, title, paths: list):
+        super().__init__(parent, title=title)
+
+        self.panel = wx.Panel(self)
+        self.box1v = wx.BoxSizer(wx.VERTICAL)
+        self.label1 = wx.StaticText(self.panel, label="Выполняется запись тегов")
+        self.list_ctrl = wx.ListCtrl(self.panel, style=wx.LC_REPORT)
+        self.btn = wx.Button(self.panel, wx.ID_OK, label="OK", size=self.FromDIP((100, 25)))
+
+        self.box1v.Add(self.label1, flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
+        self.box1v.Add(self.list_ctrl,
+                       proportion=1,
+                       flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT,
+                       border=5)
+        self.box1v.Add(self.btn, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
+        self.panel.SetSizer(self.box1v)
+        
+        file_names = [os.path.basename(x) for x in paths]
+        
+        self.list_ctrl.Ap(file_names)
 
 
 def main():
@@ -474,6 +527,20 @@ def main():
     top.Show()
     app.MainLoop()
 
-
+def maint():
+    app = wx.App()
+    f = ['C:\\Users\\Duty\\Desktop\\Test kinolist\\Параллельные матери.mp4',
+         'C:\\Users\\Duty\\Desktop\\Test kinolist\\Пираты Последнее королевское сокровище.mp4',
+         'C:\\Users\\Duty\\Desktop\\Test kinolist\\Помогите, я уменьшил своих друзей!.mp4',
+         'C:\\Users\\Duty\\Desktop\\Test kinolist\\Руби, собака-спасатель.mp4']
+    top = WriteTags(None, "Kinolist GUI", f)
+    # top.SetIcon(wx.Icon(kl.get_resource_path("favicon.ico")))
+    # top.SetClientSize(top.FromDIP(wx.Size(500, 500)))
+    top.SetClientSize(top.FromDIP(wx.Size((300, 200))))
+    top.Centre()
+    top.Show()
+    app.MainLoop()
+    
+    
 if __name__ == '__main__':
-    main()
+    maint()
