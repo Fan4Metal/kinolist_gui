@@ -306,10 +306,12 @@ class MyFrame(wx.Frame):
             self.thr = threading.Thread(target=self.thread_function,
                                         args=(self.film_id_list, path_name, 'template.docx', API, False, self.gauge))
             self.thr.start()
+            self.panel.Disable()
             while self.thr.is_alive():
                 time.sleep(0.1)
                 wx.GetApp().Yield()
                 continue
+            self.panel.Enable()
             self.gauge.SetValue(0)
 
             word_reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
@@ -409,11 +411,13 @@ class MyFrame(wx.Frame):
 
             open_thr = threading.Thread(target=self.open_thread_func, args=(self, films_from_file))
             open_thr.start()
+            self.panel.Disable()
             while open_thr.is_alive():
                 time.sleep(0.1)
                 wx.GetApp().Yield()
                 continue
-
+            self.panel.Enable()
+            
             if self.films_not_found:
                 self.notfoundpanel = NotFoundPanel(self, "Внимание!", self.films_not_found)
                 self.notfoundpanel.SetClientSize(self.notfoundpanel.FromDIP(wx.Size((300, 200))))
