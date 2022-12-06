@@ -128,7 +128,7 @@ class MyFrame(wx.Frame):
         item_clear_tag = wx.MenuItem(tag, wx.ID_ANY, 'Удалить теги в файлах mp4')
         tag.Append(item_write_tag)
         tag.Append(item_clear_tag)
-        fileMenu.AppendMenu(wx.ID_ANY, 'Теги', tag)
+        fileMenu.AppendSubMenu(tag, "Теги")
         fileMenu.AppendSeparator()
 
         fileMenu.Append(item_exit)
@@ -401,31 +401,29 @@ class MyFrame(wx.Frame):
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             path_name = fileDialog.GetPath()
-            films_from_file = kl.file_to_list(path_name)
-            films_from_file = [line.strip() for line in films_from_file if line]
-            self.film_list.Clear()
-            self.film_id_list = []
-            self.films_not_found = []
-            self.gauge.SetRange(len(films_from_file))
-            self.gauge.SetValue(0)
+        films_from_file = kl.file_to_list(path_name)
+        films_from_file = [line.strip() for line in films_from_file if line]
+        self.film_list.Clear()
+        self.film_id_list = []
+        self.films_not_found = []
+        self.gauge.SetRange(len(films_from_file))
+        self.gauge.SetValue(0)
 
-            open_thr = threading.Thread(target=self.open_thread_func, args=(self, films_from_file))
-            open_thr.start()
-            self.panel.Disable()
-            while open_thr.is_alive():
-                time.sleep(0.1)
-                wx.GetApp().Yield()
-                continue
-            self.panel.Enable()
-            
-            if self.films_not_found:
-                self.notfoundpanel = NotFoundPanel(self, "Внимание!", self.films_not_found)
-                self.notfoundpanel.SetClientSize(self.notfoundpanel.FromDIP(wx.Size((300, 200))))
-                self.notfoundpanel.CentreOnParent()
-                self.notfoundpanel.ShowModal()
+        open_thr = threading.Thread(target=self.open_thread_func, args=(self, films_from_file))
+        open_thr.start()
+        while open_thr.is_alive():
+            time.sleep(0.1)
+            wx.GetApp().Yield()
+            continue
 
-            self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-            self.gauge.SetValue(0)
+        if self.films_not_found:
+            self.notfoundpanel = NotFoundPanel(self, "Внимание!", self.films_not_found)
+            self.notfoundpanel.SetClientSize(self.notfoundpanel.FromDIP(wx.Size((300, 200))))
+            self.notfoundpanel.CentreOnParent()
+            self.notfoundpanel.ShowModal()
+
+        self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
+        self.gauge.SetValue(0)
 
     def onSaveFile(self, event):
         items_list = self.film_list.GetItems()
