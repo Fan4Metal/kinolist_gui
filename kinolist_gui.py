@@ -133,7 +133,7 @@ class MyFrame(wx.Frame):
         listMenu.Append(item_remove_dupl)
         listMenu.Append(item_reverse)
         menubar.Append(listMenu, "Список")
-        
+
         # менею "Справка"
         infoMenu = wx.Menu()
         item_about = wx.MenuItem(fileMenu, wx.ID_ANY, "О программе")
@@ -264,7 +264,7 @@ class MyFrame(wx.Frame):
             self.t_search.SetFocus()
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
             self.film_list.EnsureVisible(self.film_list.GetCount() - 1)
-                
+
     def onDelete(self, event):
         sel = self.film_list.GetSelection()
         if sel != -1:
@@ -306,7 +306,7 @@ class MyFrame(wx.Frame):
             word_path = get_reg("path", word_reg_path) + "winword.exe"
             if os.path.exists(word_path):
                 subprocess.Popen(f'start "{word_path}" "{path_name}"', shell=True)
-                
+
     def onInfo(self, event):
         sel_film_list = self.film_list.GetSelection()
         sel_search_list = self.search_list.GetSelection()
@@ -425,45 +425,40 @@ class MyFrame(wx.Frame):
                     for item in items_list:
                         f.write(item + "\n")
 
-
     def onClear(self, event):
         self.film_list.Clear()
         self.film_id_list = []
         self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-        
+
     def onRemoveDupl(self, event):
         l = len(self.film_id_list)
         dupl = []
         del_index = []
-        for i in range(l-1):
+        for i in range(l - 1):
             if self.film_list.Items[i] not in dupl:
-                for j in range(i+1, l):
+                for j in range(i + 1, l):
                     if self.film_id_list[i] == self.film_id_list[j]:
                         if self.film_list.Items[i] not in dupl:
                             dupl.append(self.film_list.Items[i])
                         del_index.append(j)
-        
-        self.film_id_list= [i for j, i in enumerate(self.film_id_list) if j not in del_index]
+
+        self.film_id_list = [i for j, i in enumerate(self.film_id_list) if j not in del_index]
         for i in sorted(del_index, reverse=True):
             self.film_list.Delete(i)
         self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
-        
+
         if dupl:
-            wx.MessageDialog(
-                            None,
-                            "Удалены дубликаты следующих фильмов:\n" + "\n".join(dupl),
-                            "Информация",
-                            wx.OK | wx.ICON_INFORMATION
-            ).ShowModal()
+            wx.MessageDialog(None, "Удалены дубликаты следующих фильмов:\n" + "\n".join(dupl), "Информация",
+                             wx.OK | wx.ICON_INFORMATION).ShowModal()
 
     def onReverse(self, event):
         self.film_id_list.reverse()
         l = len(self.film_list.Items)
         for i in range(l // 2):
             first = self.film_list.GetString(i)
-            second = self.film_list.GetString(l -1 - i)
+            second = self.film_list.GetString(l - 1 - i)
             self.film_list.SetString(i, second)
-            self.film_list.SetString(l -1 - i, first)
+            self.film_list.SetString(l - 1 - i, first)
 
 
 def main():
