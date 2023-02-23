@@ -3,6 +3,7 @@ import os
 import threading
 import time
 import winreg
+import subprocess
 
 import wx
 import wx.adv
@@ -13,7 +14,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.4.1"
+VER = "0.4.2"
 
 
 def PIL2wx(image):
@@ -304,8 +305,8 @@ class MyFrame(wx.Frame):
             word_reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
             word_path = get_reg("path", word_reg_path) + "winword.exe"
             if os.path.exists(word_path):
-                os.system(f'start "{word_path}" "{path_name}"')
-
+                subprocess.Popen(f'start "{word_path}" "{path_name}"', shell=True)
+                
     def onInfo(self, event):
         sel_film_list = self.film_list.GetSelection()
         sel_search_list = self.search_list.GetSelection()
