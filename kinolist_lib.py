@@ -17,10 +17,9 @@ from kinopoisk_unofficial.request.films.film_request import FilmRequest
 from kinopoisk_unofficial.request.staff.staff_request import StaffRequest
 from mutagen.mp4 import MP4, MP4Cover, MP4StreamInfoError
 from PIL import Image
-from tqdm import tqdm
 import PTN
 
-LIB_VER = "0.2.24"
+LIB_VER = "0.2.25"
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO,
@@ -395,7 +394,7 @@ def get_full_film_list(film_codes: list, api: str, shorten=False, progbar=None):
         counter = 0
         progbar.SetValue(counter)
 
-    for film_code in tqdm(film_codes, desc="Загрузка информации...   "):
+    for film_code in film_codes:
         try:
             film_info = get_film_info(film_code, api, shorten)
             full_films_list.append(film_info)
@@ -488,7 +487,7 @@ def write_all_films_to_docx(document, films: list, path: str, progbar=None):
         counter = 0
         progbar.SetValue(counter)
         
-    for i in tqdm(range(table_num), desc="Запись в таблицу...      "):
+    for i in range(table_num):
         current_table = document.tables[i]
         write_film_to_table(current_table, films[i])
         if progbar:
