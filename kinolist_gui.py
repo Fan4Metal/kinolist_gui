@@ -14,7 +14,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.4.3"
+VER = "0.4.4"
 
 
 def PIL2wx(image):
@@ -40,16 +40,11 @@ class NotFoundPanel(wx.Dialog):
         self.panel = wx.Panel(self)
         self.box1v = wx.BoxSizer(wx.VERTICAL)
         self.label1 = wx.StaticText(self.panel, label="Следующие фильмы не найдены!")
-        self.list_notfound = wx.TextCtrl(self.panel,
-                                         value="\n".join(not_found),
-                                         style=wx.TE_READONLY | wx.ALIGN_TOP | wx.TE_MULTILINE)
+        self.list_notfound = wx.TextCtrl(self.panel, value="\n".join(not_found), style=wx.TE_READONLY | wx.ALIGN_TOP | wx.TE_MULTILINE)
         self.btn = wx.Button(self.panel, wx.ID_OK, label="OK", size=self.FromDIP((100, 25)))
 
         self.box1v.Add(self.label1, flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
-        self.box1v.Add(self.list_notfound,
-                       proportion=1,
-                       flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT,
-                       border=5)
+        self.box1v.Add(self.list_notfound, proportion=1, flag=wx.EXPAND | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
         self.box1v.Add(self.btn, flag=wx.ALIGN_CENTER | wx.TOP | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
         self.panel.SetSizer(self.box1v)
 
@@ -85,10 +80,12 @@ class InfoPanel(wx.Dialog):
         else:
             self.l_search1.Label = f"{filminfo[0]} ({filminfo[1]}) - нет рейтинга"
 
+        orig_name_year = f"{filminfo[10]}, {filminfo[1]}\n" if filminfo[10] != None else ""
+
         if len(filminfo[7]) > 1:
-            cast = f"{filminfo[10]}, {filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссеры: {', '.join(filminfo[7])}\nВглавных ролях: {', '.join(filminfo[8])}"
+            cast = f"{orig_name_year}{', '.join(filminfo[3])}\nРежиссеры: {', '.join(filminfo[7])}\nВглавных ролях: {', '.join(filminfo[8])}"
         else:
-            cast = f"{filminfo[10]}, {filminfo[1]}\n{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
+            cast = f"{orig_name_year}{', '.join(filminfo[3])}\nРежиссер: {filminfo[7][0]}\nВглавных ролях: {', '.join(filminfo[8])}"
         self.l_search2 = wx.StaticText(self.panel, label=cast)
 
         self.l_search3 = wx.TextCtrl(self.panel,
@@ -198,10 +195,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_BUTTON, self.onDown, id=self.b_down.GetId())
 
         self.b_clear = wx.Button(self.panel, wx.ID_ANY, size=self.FromDIP((100, 25)), label='Очистить все')
-        self.gr.Add(self.b_clear,
-                    pos=(6, 2),
-                    flag=wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_BOTTOM | wx.BOTTOM | wx.LEFT | wx.RIGHT,
-                    border=5)
+        self.gr.Add(self.b_clear, pos=(6, 2), flag=wx.ALIGN_CENTER_HORIZONTAL | wx.ALIGN_BOTTOM | wx.BOTTOM | wx.LEFT | wx.RIGHT, border=5)
         self.Bind(wx.EVT_BUTTON, self.onClear, id=self.b_clear.GetId())
 
         self.b_save = wx.Button(self.panel, wx.ID_ANY, label='Сохранить в формате docx')
@@ -277,18 +271,12 @@ class MyFrame(wx.Frame):
             self.statusbar.SetStatusText("Фильмов: " + str(len(self.film_id_list)))
 
     @staticmethod
-    def thread_function(kp_id_list: list,
-                        output: str,
-                        template: str,
-                        api: str,
-                        shorten: bool = False,
-                        progbar: wx.Gauge = None):
+    def thread_function(kp_id_list: list, output: str, template: str, api: str, shorten: bool = False, progbar: wx.Gauge = None):
         kl.make_docx(kp_id_list, output, template, api, shorten, progbar)
 
     def onSave(self, event):
         if self.film_id_list:
-            with wx.FileDialog(self, "Сохранить файл...", "", "", "Microsoft Word (*.docx)|*.docx",
-                               style=wx.FD_SAVE) as fileDialog:
+            with wx.FileDialog(self, "Сохранить файл...", "", "", "Microsoft Word (*.docx)|*.docx", style=wx.FD_SAVE) as fileDialog:
                 if fileDialog.ShowModal() == wx.ID_CANCEL:
                     return
                 path_name = fileDialog.GetPath()
@@ -416,8 +404,7 @@ class MyFrame(wx.Frame):
     def onSaveFile(self, event):
         items_list = self.film_list.GetItems()
         if items_list:
-            with wx.FileDialog(self, "Сохранить файл...", "", "", "Текстовые файлы (*.txt)|*.txt",
-                               style=wx.FD_SAVE) as fileDialog:
+            with wx.FileDialog(self, "Сохранить файл...", "", "", "Текстовые файлы (*.txt)|*.txt", style=wx.FD_SAVE) as fileDialog:
                 if fileDialog.ShowModal() == wx.ID_CANCEL:
                     return
                 path_name = fileDialog.GetPath()
