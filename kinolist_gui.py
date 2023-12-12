@@ -1,5 +1,6 @@
 # [x] Добавить сортировку по алфавиту
 # [x] Открытие текстовых файлов в отличной от  UTF-8 кодировки
+# [ ] Добавить отмену операций
 
 import ctypes
 import os
@@ -17,7 +18,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.4.4"
+VER = "0.4.5"
 
 
 def PIL2wx(image):
@@ -129,8 +130,10 @@ class MyFrame(wx.Frame):
         # меню "Список"
         listMenu = wx.Menu()
         item_remove_dupl = wx.MenuItem(listMenu, wx.ID_ANY, "Удалить дубликаты")
+        item_sort = wx.MenuItem(listMenu, wx.ID_ANY, "Отсортировать по алфавиту")
         item_reverse = wx.MenuItem(listMenu, wx.ID_ANY, "Обратный порядок")
         listMenu.Append(item_remove_dupl)
+        listMenu.Append(item_sort)
         listMenu.Append(item_reverse)
         menubar.Append(listMenu, "Список")
 
@@ -149,6 +152,7 @@ class MyFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.onAboutBox, id=item_about.GetId())
         self.Bind(wx.EVT_MENU, self.onRemoveDupl, id=item_remove_dupl.GetId())
         self.Bind(wx.EVT_MENU, self.onReverse, id=item_reverse.GetId())
+        self.Bind(wx.EVT_MENU, self.onSort, id=item_sort.GetId())
 
         # ========== Основные элементы ==========
         self.panel = wx.Panel(self)
@@ -456,6 +460,15 @@ class MyFrame(wx.Frame):
             second = self.film_list.GetString(l - 1 - i)
             self.film_list.SetString(i, second)
             self.film_list.SetString(l - 1 - i, first)
+
+    def onSort(self, event):
+        dict_not_sorted = dict(zip(self.film_list.Items, self.film_id_list))
+        dict_sorted = dict(sorted(dict_not_sorted.items()))
+        self.film_id_list = []
+        self.film_list.Clear()
+        for key in dict_sorted:
+            self.film_id_list.append(dict_sorted[key])
+            self.film_list.Append(key)
 
 
 def main():
