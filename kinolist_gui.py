@@ -380,7 +380,14 @@ class MyFrame(wx.Frame):
             if fileDialog.ShowModal() == wx.ID_CANCEL:
                 return
             path_name = fileDialog.GetPath()
-            films_from_file = kl.file_to_list(path_name)
+            try:
+                films_from_file = kl.file_to_list(path_name)
+            except UnicodeDecodeError:
+                wx.MessageDialog(None,
+                                 "Ошибка кодировки файла!\nФайл должен быть в кодировке UTF-8.\n(Илюха, откуда ты берешь эти файлы??)",
+                                 "Ошибка!", wx.OK | wx.ICON_ERROR).ShowModal()
+                return
+
             films_from_file = [line.strip() for line in films_from_file if line]
             self.film_list.Clear()
             self.film_id_list = []
