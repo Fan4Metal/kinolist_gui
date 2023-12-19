@@ -1,6 +1,6 @@
 # [x] Добавить сортировку по алфавиту
 # [x] Открытие текстовых файлов в отличной от  UTF-8 кодировки
-# [ ] Добавить отмену операций
+# [x] Добавить отмену операций
 
 import ctypes
 import os
@@ -18,7 +18,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.4.5"
+VER = "0.4.6"
 
 
 def PIL2wx(image):
@@ -228,6 +228,22 @@ class MyFrame(wx.Frame):
                               size=self.FromDIP((self.statusbar.GetSize()[0] - 72, 20)),
                               style=wx.GA_HORIZONTAL | wx.GA_PROGRESS | wx.GA_SMOOTH)
 
+        self.panel.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.l_search.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.t_search.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_search.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.film_list.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_add.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_info.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_delete.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_up.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_down.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_clear.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_save.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.b_clear.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.statusbar.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+        self.gauge.Bind(wx.EVT_KEY_DOWN, self.onKeyboardHandle)
+
     def statusbar_status(self, event):
         pass
 
@@ -279,7 +295,8 @@ class MyFrame(wx.Frame):
 
     @staticmethod
     def thread_function(kp_id_list: list, output: str, template: str, api: str, shorten: bool = False, progbar: wx.Gauge = None):
-        kl.make_docx(kp_id_list, output, template, api, shorten, progbar)
+        if not kl.make_docx(kp_id_list, output, template, api, shorten, progbar):
+            wx.MessageDialog(None, "Операция отменена, список не создан!", "Ошибка!", wx.OK | wx.ICON_ERROR).ShowModal()
 
     def onSave(self, event):
         if self.film_id_list:
@@ -297,10 +314,11 @@ class MyFrame(wx.Frame):
                 continue
             self.gauge.SetValue(0)
 
-            word_reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
-            word_path = get_reg("path", word_reg_path) + "winword.exe"
-            if os.path.exists(word_path):
-                subprocess.Popen(f'start "{word_path}" "{path_name}"', shell=True)
+            if not config.stop_flag:
+                word_reg_path = R"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\Winword.exe"
+                word_path = get_reg("path", word_reg_path) + "winword.exe"
+                if os.path.exists(word_path):
+                    subprocess.Popen(f'start "{word_path}" "{path_name}"', shell=True)
 
     def onInfo(self, event):
         sel_film_list = self.film_list.GetSelection()
@@ -359,7 +377,10 @@ class MyFrame(wx.Frame):
     def open_thread_func(self, films_from_file):
         counter = 0
         self.films_not_found = []
+        config.stop_flag = False
         for film in films_from_file:
+            if config.stop_flag:
+                return
             foundfilm = kl.find_kp_id4(film, API)
             if foundfilm:
                 self.film_list.Append(f"{foundfilm[1]} ({foundfilm[2]})")
@@ -469,6 +490,12 @@ class MyFrame(wx.Frame):
         for key in dict_sorted:
             self.film_id_list.append(dict_sorted[key])
             self.film_list.Append(key)
+
+    def onKeyboardHandle(self, event):
+        key = event.GetKeyCode()
+        if key == wx.WXK_ESCAPE:
+            config.stop_flag = True
+        event.Skip()
 
 
 def main():

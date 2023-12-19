@@ -19,12 +19,12 @@ from mutagen.mp4 import MP4, MP4Cover, MP4StreamInfoError
 from PIL import Image
 import PTN
 
+import config
+
 LIB_VER = "0.2.25"
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
-                        format='[%(asctime)s]%(levelname)s:%(name)s:%(message)s',
-                        datefmt='%d.%m.%Y %H:%M:%S')
+    logging.basicConfig(level=logging.INFO, format='[%(asctime)s]%(levelname)s:%(name)s:%(message)s', datefmt='%d.%m.%Y %H:%M:%S')
 log = logging.getLogger("Lib")
 
 
@@ -120,9 +120,7 @@ def find_kp_id(film_list: list, api: str):
         payload = {'keyword': film, 'page': 1}
         headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
         try:
-            r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
-                             headers=headers,
-                             params=payload)
+            r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword', headers=headers, params=payload)
             if r.status_code == 200:
                 resp_json = r.json()
                 if resp_json['searchFilmsCountResult'] == 0:
@@ -165,9 +163,7 @@ def find_kp_id2(film: str, api: str):
     payload = {'keyword': film, 'page': 1}
     headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
     try:
-        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
-                         headers=headers,
-                         params=payload)
+        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword', headers=headers, params=payload)
         if r.status_code == 200:
             resp_json = r.json()
             if resp_json['searchFilmsCountResult'] == 0:
@@ -210,9 +206,7 @@ def find_kp_id3(film: str, api: str):
     payload = {'keyword': film, 'page': 1}
     headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
     try:
-        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
-                         headers=headers,
-                         params=payload)
+        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword', headers=headers, params=payload)
         if r.status_code == 200:
             resp_json = r.json()
             if resp_json['searchFilmsCountResult'] == 0:
@@ -265,9 +259,7 @@ def find_kp_id4(film: str, api: str):
     payload = {'keyword': film, 'page': 1}
     headers = {'X-API-KEY': api, 'Content-Type': 'application/json'}
     try:
-        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword',
-                            headers=headers,
-                            params=payload)
+        r = get('https://kinopoiskapiunofficial.tech/api/v2.1/films/search-by-keyword', headers=headers, params=payload)
         if r.status_code == 200:
             resp_json = r.json()
             if resp_json['searchFilmsCountResult'] == 0:
@@ -342,17 +334,13 @@ def get_film_info(film_code, api, shorten=False):
     # Сокращение описания фильма
     if shorten:
         description = response_film.film.description.replace("\n\n", " ")
-        description = textwrap.shorten(description,
-                                       665,
-                                       fix_sentence_endings=True,
-                                       break_long_words=False,
-                                       placeholder='...')
+        description = textwrap.shorten(description, 665, fix_sentence_endings=True, break_long_words=False, placeholder='...')
     else:
         description = response_film.film.description
 
     film_list = [
-        film_name, response_film.film.year, response_film.film.rating_kinopoisk, countries, description,
-        response_film.film.poster_url, response_film.film.poster_url_preview
+        film_name, response_film.film.year, response_film.film.rating_kinopoisk, countries, description, response_film.film.poster_url,
+        response_film.film.poster_url_preview
     ]
     result = film_list
     result.append(directors_list)
@@ -394,7 +382,10 @@ def get_full_film_list(film_codes: list, api: str, shorten=False, progbar=None):
         counter = 0
         progbar.SetValue(counter)
 
+    config.stop_flag = False
     for film_code in film_codes:
+        if config.stop_flag:
+            return
         try:
             film_info = get_film_info(film_code, api, shorten)
             full_films_list.append(film_info)
@@ -481,12 +472,12 @@ def write_all_films_to_docx(document, films: list, path: str, progbar=None):
     table_num = len(films)
     if table_num > 1:
         clone_first_table(document, table_num - 1)
-    
+
     if progbar:
-        progbar.SetRange(table_num)    
+        progbar.SetRange(table_num)
         counter = 0
         progbar.SetValue(counter)
-        
+
     for i in range(table_num):
         current_table = document.tables[i]
         write_film_to_table(current_table, films[i])
@@ -574,11 +565,15 @@ def docx_to_pdf_libre(file_in):
     return code_exit
 
 
-def make_docx(kp_id_list: list, output: str, template: str, api: str, /, shorten: bool=False, progbar=None):
+def make_docx(kp_id_list: list, output: str, template: str, api: str, /, shorten: bool = False, progbar=None):
     file_path = get_resource_path(template)
-    doc = Document(file_path)
     full_list = get_full_film_list(kp_id_list, api, shorten, progbar=progbar)
-    write_all_films_to_docx(doc, full_list, output, progbar=progbar)
+    if not config.stop_flag:
+        doc = Document(file_path)
+        write_all_films_to_docx(doc, full_list, output, progbar=progbar)
+        return True
+    else:
+        return False
 
 
 def rename_torrents(api: str, path=""):
@@ -597,9 +592,7 @@ def rename_torrents(api: str, path=""):
     titles_parsed = []  # список распознанных парсером имен
     for file in files_paths:
         base_name = os.path.basename(file)
-        tuple = (file,
-                 os.path.splitext(base_name)[0],
-                 os.path.splitext(base_name)[1])
+        tuple = (file, os.path.splitext(base_name)[0], os.path.splitext(base_name)[1])
         titles_all.append(tuple)
         titles_parsed.append(PTN.parse(base_name)['title'])
 
@@ -618,12 +611,12 @@ def rename_torrents(api: str, path=""):
     for i, film in enumerate(films_info):
         trtable = film[0].maketrans('', '', '\/:*?"<>')
         file_name = film[0].translate(trtable)  # отфильтровываем запрещенные символы в новом имени файла
-        os.rename(titles_all_valid[i][0],  # путь до исходного файла
-                  os.path.join(
-                        os.path.dirname(titles_all_valid[i][0]),  # путь до каталога исходного файла
-                        f"{file_name}{titles_all_valid[i][2]}"  # новое имя файла + исходное расширение
-                        )
-                  )
+        os.rename(
+            titles_all_valid[i][0],  # путь до исходного файла
+            os.path.join(
+                os.path.dirname(titles_all_valid[i][0]),  # путь до каталога исходного файла
+                f"{file_name}{titles_all_valid[i][2]}"  # новое имя файла + исходное расширение
+            ))
         log.info(f"{titles_all_valid[i][1]}{titles_all_valid[i][2]} --> {file_name}{titles_all_valid[i][2]}")
 
     log.info("Файлы переименованы.")
@@ -672,16 +665,10 @@ kl -l                                     --создает список list.doc
                         action="version",
                         version=f"%(prog)s {LIB_VER}",
                         help="выводит версию программы и завершает работу")
-    parser.add_argument("-f",
-                        "--file",
-                        nargs=1,
-                        help="создает список фильмов в формате docx из текстового файла в формате txt")
+    parser.add_argument("-f", "--file", nargs=1, help="создает список фильмов в формате docx из текстового файла в формате txt")
     parser.add_argument("-m", "--movie", nargs="+", help="создает список фильмов в формате docx из указанных фильмов")
     parser.add_argument("-o", "--output", nargs=1, help="имя выходного файла (list.docx по умолчанию)")
-    parser.add_argument("-s",
-                        "--shorten",
-                        action='store_true',
-                        help="сокращает описания фильмов, чтобы поместились два фильма на странице")
+    parser.add_argument("-s", "--shorten", action='store_true', help="сокращает описания фильмов, чтобы поместились два фильма на странице")
     parser.add_argument("-t",
                         "--tag",
                         nargs="?",
@@ -691,10 +678,7 @@ kl -l                                     --создает список list.doc
                         nargs="?",
                         const=os.getcwd(),
                         help="удаляет все теги в файле mp4 (или во всех mp4 файлах в текущем каталоге)")
-    parser.add_argument("-r", "--rename",
-                        nargs="?",
-                        const=os.getcwd(),
-                        help="переименовывает mp4 файлыв в текущем каталоге")
+    parser.add_argument("-r", "--rename", nargs="?", const=os.getcwd(), help="переименовывает mp4 файлыв в текущем каталоге")
     parser.add_argument("-l",
                         "--list",
                         nargs="?",
