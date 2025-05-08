@@ -120,12 +120,20 @@ class MyFrame(wx.Frame):
         fileMenu = wx.Menu()
         item_open = wx.MenuItem(fileMenu, wx.ID_OPEN, "Открыть файл\tCtrl+O")
         item_save = wx.MenuItem(fileMenu, wx.ID_SAVE, "Сохранить файл\tCtrl+S")
+        self.item_save_options = wx.MenuItem(fileMenu,
+                                             wx.ID_ANY,
+                                             "Сохранить с Kinopoisk ID",
+                                             "Добавляет тэг Kinopoisk ID в формате KP~XXX для однозначгого определения фильма",
+                                             kind=wx.ITEM_CHECK)
         item_exit = wx.MenuItem(fileMenu, wx.ID_EXIT, "Выход\tCtrl+Q")
         fileMenu.Append(item_open)
         fileMenu.Append(item_save)
         fileMenu.AppendSeparator()
+        fileMenu.Append(self.item_save_options)
+        fileMenu.AppendSeparator()
         fileMenu.Append(item_exit)
         menubar.Append(fileMenu, "Файл")
+        self.item_save_options.Check(True)
 
         # меню "Список"
         listMenu = wx.Menu()
@@ -444,8 +452,11 @@ class MyFrame(wx.Frame):
                     return
                 path_name = fileDialog.GetPath()
                 with open(path_name, "w", encoding="utf-8") as f:
-                    for item in items_list:
-                        f.write(item + "\n")
+                    for item, id in zip(items_list, self.film_id_list):
+                        if self.item_save_options.IsChecked():
+                            f.write(f"{item} KP~{id}\n")
+                        else:
+                            f.write(f"{item}\n")
 
     def onClear(self, event):
         self.film_list.Clear()
