@@ -18,7 +18,7 @@ import kinolist_lib as kl
 ctypes.windll.shcore.SetProcessDpiAwareness(2)
 API = config.KINOPOISK_API_TOKEN
 
-VER = "0.4.6"
+VER = "0.4.7"
 
 
 def PIL2wx(image):
